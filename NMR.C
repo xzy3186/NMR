@@ -70,23 +70,32 @@ void NMR::Loop()
    if (fChain == 0) return;
 
    Long64_t nentries = fChain->GetEntriesFast();
+   //cout<<"Total number of events: "<<nentries<<endl;
 
    Long64_t nbytes = 0, nb = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
-      if(jentry%10000==0){
-         cout<<"\r"<<(double)jentry/nentries*100<<"% of events have been analyzed";
+      if(count%500000==0){
+         cout<<jentry<<" events have been analyzed"<<endl;
+         //cout<<"\r"<<(double)count/nentries*100<<"% of events have been analyzed";
       }
       Long64_t ientry = LoadTree(jentry);
+      count++;
+      time_present = SR_Clock_UP*pow(2,16)+SR_Clock;
+      if(time_present < time_previous){
+         time_previous = 0;
+      }
+      if(time_present - time_previous < 100){
+         time = time + time_present - time_previous;
+      }
+      time_previous = time_present;
+      //if(time<6000){
+      //   continue;
+      //}
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       if(FLAG==100){
          continue;
       }
-      Long64_t time;
-      time = (SR_Clock_UP*pow(2,16)+SR_Clock)/1000;
-      //if(time<6000){
-      //   continue;
-      //}
 
       double energy;
       if(E_GammaH_L<=3000){
@@ -94,9 +103,9 @@ void NMR::Loop()
       }else{
          energy = a2_GammaH_L*Float_t(E_GammaH_L + rand05()) + b2_GammaH_L + c2_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
       }
-      int bGammaG = 0;
+      int bGammaH = 0;
       if(energy>505 && energy<515){
-         bGammaG = 1;
+         bGammaH = 1;
       }
       h_GammaH_cal->Fill(energy);
 
@@ -105,14 +114,14 @@ void NMR::Loop()
       }else{
          energy = a2_GammaG_L*Float_t(E_GammaG_L + rand05()) + b2_GammaG_L + c2_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
       }
-      int bGammaH = 0;
+      int bGammaG = 0;
       if(energy>505 && energy<515){
          bGammaG = 1;
       }
-      //h_GammaG_cal->Fill(energy);
-      //if(bGammaH==0 && bGammaG==0){
-      //   continue;
-      //}
+      h_GammaG_cal->Fill(energy);
+      if(bGammaH==0 && bGammaG==0){
+         continue;
+      }
 
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
@@ -136,17 +145,18 @@ void NMR::Loop()
 
 void NMR::MakeNMR(){
    NumFreq = 0;
-   cout<< freqset.size() << endl;
+   cout<< freqset.size() <<" frequencies found:"<< endl;
    for(itfreqset=freqset.begin(); itfreqset!=freqset.end(); itfreqset++){
       int ffreq = *itfreqset;
       int fup = CtsUp[ffreq], fdown = CtsDown[ffreq];
       gFreq[NumFreq] = ffreq;
       gAsymm[NumFreq] = (double)(fup - fdown)/(fup + fdown);
-      gFreqErr[NumFreq] = 0;
+      gFreqErr[NumFreq] = Mod;
       gAsymmErr[NumFreq] = sqrt(4.0*fup*fdown/pow(fup+fdown,3));
       NumFreq++;
       cout<<NumFreq<<" "<<ffreq<<" "<<fup<<" "<<fdown<<endl;
    }
+   cout<<"Total Data taking time: "<<time/1000/60<<" min."<<endl;
    gNMR = new TGraphErrors(NumFreq,gFreq,gAsymm,gFreqErr,gAsymmErr);
    gNMR->SetMarkerStyle(20);
    gNMR->SetLineWidth(0);

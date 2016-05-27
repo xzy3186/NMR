@@ -84,6 +84,7 @@ public :
    int NumFreq;
    double gFreq[30], gAsymm[30], gFreqErr[30], gAsymmErr[30];
    int CtsUp[5000], CtsDown[5000];
+   Long64_t time, time_previous, time_present, count;
    std::set<int> freqset;
    std::set<int>::iterator itfreqset;
    TGraphErrors *gNMR;
@@ -228,6 +229,10 @@ Long64_t NMR::LoadTree(Long64_t entry)
 void NMR::InitPara(){
    //initialize all the variables defined by myself
    NumFreq = 0;
+   time = 0;
+   time_previous = 0;
+   time_present = 0;
+   count = 0;
    for(int i=0; i<30; i++){
       gFreq[i]=0;
       gAsymm[i]=0;
