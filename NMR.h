@@ -81,6 +81,7 @@ public :
    UShort_t        SR_TiD3;
 
    //some variables for near-line analysis
+   double E_GammaH_cal, E_GammaG_cal;
    int NumFreq;
    double gFreq[30], gAsymm[30], gFreqErr[30], gAsymmErr[30];
    int CtsUp[5000], CtsDown[5000];
@@ -89,6 +90,7 @@ public :
    std::set<int>::iterator itfreqset;
    TGraphErrors *gNMR;
    TH1F *h_GammaH_cal, *h_GammaG_cal;
+   TH1F *h_EUp, *h_EDown;
    //TH1F *h_TAC_delta_gH, *h_TAC_delta_gG;
 
    //calibration parameters of gamma
@@ -171,7 +173,7 @@ public :
 
    NMR(char* filename, TTree *tree=0);
    virtual ~NMR();
-   virtual Int_t    Cut(Long64_t entry);
+   virtual Int_t    Cut();
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
@@ -180,6 +182,8 @@ public :
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
    virtual int      ReadPara(char* filename);
+   virtual void     CalibGammaH();
+   virtual void     CalibGammaG();
    virtual void     MakeNMR();
 };
 
@@ -229,6 +233,8 @@ Long64_t NMR::LoadTree(Long64_t entry)
 void NMR::InitPara(){
    //initialize all the variables defined by myself
    NumFreq = 0;
+   E_GammaH_cal = 0;
+   E_GammaG_cal = 0;
    time = 0;
    time_previous = 0;
    time_present = 0;
@@ -246,6 +252,8 @@ void NMR::InitPara(){
    freqset.clear();
    h_GammaH_cal = new TH1F("h_GammaH_cal","h_GammaH_cal",4000,0,4000);
    h_GammaG_cal = new TH1F("h_GammaG_cal","h_GammaG_cal",4000,0,4000);
+   h_EUp = new TH1F("h_EUp","h_EUp",1600,0,16000);
+   h_EDown = new TH1F("h_EDown","h_EDown",1600,0,16000);
    //h_TAC_delta_gH = new TH1F("h_TAC_delta_gH","h_TAC_delta_gH",1600,0,16000);
    //h_TAC_delta_gG = new TH1F("h_TAC_delta_gG","h_TAC_delta_gG",1600,0,16000);
 
@@ -357,11 +365,44 @@ void NMR::Show(Long64_t entry)
    if (!fChain) return;
    fChain->Show(entry);
 }
-Int_t NMR::Cut(Long64_t entry)
+
+Float_t rand05(){
+   return rand()*1.0/RAND_MAX - 0.5;
+}
+
+void NMR::CalibGammaH(){
+   if(E_GammaH_L<=3000){
+      E_GammaH_cal = a1_GammaH_L*Float_t(E_GammaH_L + rand05()) + b1_GammaH_L + c1_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
+   }else{
+      E_GammaH_cal = a2_GammaH_L*Float_t(E_GammaH_L + rand05()) + b2_GammaH_L + c2_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
+   }
+}
+
+void NMR::CalibGammaG(){
+   if(E_GammaG_L<=3000){
+      E_GammaG_cal = a1_GammaG_L*Float_t(E_GammaG_L + rand05()) + b1_GammaG_L + c1_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
+   }else{
+      E_GammaG_cal = a2_GammaG_L*Float_t(E_GammaG_L + rand05()) + b2_GammaG_L + c2_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
+   }
+}
+
+Int_t NMR::Cut()
 {
 // This function may be called from Loop.
 // returns  1 if entry is accepted.
 // returns -1 otherwise.
-   return 1;
+   int bGammaH = 0;
+   if(E_GammaH_cal>505 && E_GammaH_cal<515){
+      bGammaH = 1;
+   }
+   int bGammaG = 0;
+   if(E_GammaG_cal>505 && E_GammaG_cal<515){
+      bGammaG = 1;
+   }
+   if(bGammaH || bGammaG){
+      return 1;
+   }else{
+      return 0;
+   }
 }
 #endif // #ifdef NMR_cxx

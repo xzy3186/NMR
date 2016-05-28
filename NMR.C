@@ -38,10 +38,6 @@ int NMR::ReadPara(char* filename){
    return 1;
 }
 
-Float_t rand05(){
-   return rand()*1.0/RAND_MAX - 0.5;
-}
-
 void NMR::Loop()
 {
 //   In a ROOT session, you can do:
@@ -97,31 +93,17 @@ void NMR::Loop()
          continue;
       }
 
-      double energy;
-      if(E_GammaH_L<=3000){
-         energy = a1_GammaH_L*Float_t(E_GammaH_L + rand05()) + b1_GammaH_L + c1_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
-      }else{
-         energy = a2_GammaH_L*Float_t(E_GammaH_L + rand05()) + b2_GammaH_L + c2_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
-      }
-      int bGammaH = 0;
-      if(energy>505 && energy<515){
-         bGammaH = 1;
-      }
-      h_GammaH_cal->Fill(energy);
+      CalibGammaH();
+      CalibGammaG();
+      h_GammaH_cal->Fill(E_GammaH_cal);
+      h_GammaG_cal->Fill(E_GammaG_cal);
 
-      if(E_GammaG_L<=3000){
-         energy = a1_GammaG_L*Float_t(E_GammaG_L + rand05()) + b1_GammaG_L + c1_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
-      }else{
-         energy = a2_GammaG_L*Float_t(E_GammaG_L + rand05()) + b2_GammaG_L + c2_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
-      }
-      int bGammaG = 0;
-      if(energy>505 && energy<515){
-         bGammaG = 1;
-      }
-      h_GammaG_cal->Fill(energy);
-      if(bGammaH==0 && bGammaG==0){
+      if(Cut() == 0){
          continue;
       }
+
+      h_EUp->Fill(E_Up);
+      h_EDown->Fill(E_Down);
 
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
