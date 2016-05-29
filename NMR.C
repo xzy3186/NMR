@@ -1,6 +1,7 @@
 #define NMR_cxx
 #include "NMR.h"
 #include <TH2.h>
+#include <TF1.h>
 #include <TStyle.h>
 #include <TCanvas.h>
 
@@ -28,6 +29,29 @@ int NMR::ReadPara(char* filename){
          fscanf(fin,"%i",&EDeltaDownMin);
       }else if(strcmp(temp,"EDELTADOWNMAX")==0){
          fscanf(fin,"%i",&EDeltaDownMax);
+      }else if(strcmp(temp,"END")==0){
+         break;
+      }else {
+         cout<<"Could not read your input keyword. Aborting program."<<endl;
+         return 0;
+      }
+   }
+   return 1;
+}
+
+int NMR::ReadFitPara(char* filename){
+   char temp[300];
+   FILE *fin = fopen(filename,"r");
+   while(!feof(fin)){
+      fscanf(fin,"%s ",temp);
+      if(strcmp(temp,"AMPLITUDE")==0){
+         fscanf(fin,"%lf",&Amp);
+      }else if(strcmp(temp,"BASELINE")==0){
+         fscanf(fin,"%lf",&BaseL);
+      }else if(strcmp(temp,"WIDTH")==0){
+         fscanf(fin,"%lf",&Width);
+      }else if(strcmp(temp,"LARMORFREQ")==0){
+         fscanf(fin,"%lf",&LarmorFreq);
       }else if(strcmp(temp,"END")==0){
          break;
       }else {
@@ -75,6 +99,9 @@ void NMR::Loop()
          //cout<<"\r"<<(double)count/nentries*100<<"% of events have been analyzed";
       }
       Long64_t ientry = LoadTree(jentry);
+      if (ientry < 0) break;
+      nb = fChain->GetEntry(jentry);   nbytes += nb;
+
       count++;
       time_present = SR_Clock_UP*pow(2,16)+SR_Clock;
       if(time_present < time_previous){
@@ -87,8 +114,6 @@ void NMR::Loop()
       //if(time<6000){
       //   continue;
       //}
-      if (ientry < 0) break;
-      nb = fChain->GetEntry(jentry);   nbytes += nb;
       if(FLAG==100){
          continue;
       }
@@ -98,9 +123,9 @@ void NMR::Loop()
       h_GammaH_cal->Fill(E_GammaH_cal);
       h_GammaG_cal->Fill(E_GammaG_cal);
 
-      if(Cut() == 0){
-         continue;
-      }
+      //if(Cut() == 0){
+      //   continue;
+      //}
 
       h_EUp->Fill(E_Up);
       h_EDown->Fill(E_Down);
@@ -112,6 +137,10 @@ void NMR::Loop()
       }
       if(TAC_Down>500 && TAC_Down<15000 && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
+      }
+      //just for test, to sum RF-OFF freq at different position.
+      if(FREQ>2200 && FREQ<2800){
+         FREQ = 2500;
       }
       if(GoUp && !GoDown){
          CtsUp[FREQ]++;
@@ -127,6 +156,7 @@ void NMR::Loop()
 
 void NMR::MakeNMR(){
    NumFreq = 0;
+
    cout<< freqset.size() <<" frequencies found:"<< endl;
    for(itfreqset=freqset.begin(); itfreqset!=freqset.end(); itfreqset++){
       int ffreq = *itfreqset;
@@ -149,3 +179,28 @@ void NMR::MakeNMR(){
    gNMR->SetName("NMR");
    //g1->Draw("AP");
 }
+
+void NMR::FitNMR(double fit_low, double fit_high){
+   ReadFitPara("NMR_NQR_fit.in");
+   TF1 *f1=new TF1("f1","[0]+[1]-[1]*pow(0.5/[3],2)*pow(sqrt(pow([2]-x+[3],2) + pow([4],2)) - sqrt(pow([2]-x-[3],2) + pow([4],2)),2)");
+   f1->SetParName(0,"Baseline");
+   f1->SetParName(1,"Amplitude");
+   f1->SetParName(2,"LarmorFreq");
+   f1->SetParName(3,"Modulation");
+   f1->SetParName(4,"Width");
+   f1->SetParameter(0,BaseL);
+   f1->SetParameter(1,Amp);
+   f1->SetParameter(2,LarmorFreq);
+   f1->FixParameter(3,Mod);
+   f1->SetParameter(4,Width); f1->SetParLimits(4,0,500);
+   gNMR->Fit("f1","EM","D",fit_low,fit_high);
+   double chi2 = f1->GetChisquare();
+   double NDF = f1->GetNDF();
+   cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
+   cout<<"Baseline = "<<f1->GetParameter(0)<<endl;
+   cout<<"Amplitude = "<<f1->GetParameter(1)<<endl;
+   cout<<"LarmorFreq = "<<f1->GetParameter(2)<<endl;
+   cout<<"Modulation = "<<f1->GetParameter(3)<<endl;
+   cout<<"Width = "<<f1->GetParameter(4)<<endl;
+}
+

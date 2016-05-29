@@ -116,6 +116,9 @@ public :
    int EDownMin, EDownMax;
    int EDeltaDownMin, EDeltaDownMax;
 
+   //parameters read from fitting input file
+   double Amp, BaseL, Width, LarmorFreq;
+
    // List of branches
    TBranch        *b_E_Up;   //!
    TBranch        *b_E_deltaUp;   //!
@@ -182,9 +185,11 @@ public :
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
    virtual int      ReadPara(char* filename);
+   virtual int      ReadFitPara(char* filename);
    virtual void     CalibGammaH();
    virtual void     CalibGammaG();
    virtual void     MakeNMR();
+   virtual void     FitNMR(double fit_low, double fit_high);
 };
 
 #endif
