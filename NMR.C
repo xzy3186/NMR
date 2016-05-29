@@ -99,13 +99,10 @@ void NMR::Loop()
          //cout<<"\r"<<(double)count/nentries*100<<"% of events have been analyzed";
       }
       Long64_t ientry = LoadTree(jentry);
-<<<<<<< HEAD
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
       count++;
-=======
->>>>>>> a09d1fbaa67783c03dc7318816f13cbd5f87e100
       time_present = SR_Clock_UP*pow(2,16)+SR_Clock;
       if(time_present < time_previous){
          time_previous = 0;
