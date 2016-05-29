@@ -94,15 +94,18 @@ void NMR::Loop()
 
    Long64_t nbytes = 0, nb = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
-      if(count%500000==0){
+      if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
          //cout<<"\r"<<(double)count/nentries*100<<"% of events have been analyzed";
       }
       Long64_t ientry = LoadTree(jentry);
+<<<<<<< HEAD
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
       count++;
+=======
+>>>>>>> a09d1fbaa67783c03dc7318816f13cbd5f87e100
       time_present = SR_Clock_UP*pow(2,16)+SR_Clock;
       if(time_present < time_previous){
          time_previous = 0;
