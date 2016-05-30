@@ -114,8 +114,10 @@ public :
    int TimeCut;
    int EUpMin, EUpMax;
    int EDeltaUpMin, EDeltaUpMax;
+   int TACUpMin, TACUpMax;
    int EDownMin, EDownMax;
    int EDeltaDownMin, EDeltaDownMax;
+   int TACDownMin, TACDownMax;
 
    //parameters read from fitting input file
    double Amp, BaseL, Width, LarmorFreq;

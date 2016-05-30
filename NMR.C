@@ -5,8 +5,6 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 
-TH1F *h1 = new TH1F("h1","h1",2000,0,2000);
-
 int NMR::ReadPara(char* filename){
    InitPara();
    char temp[300];
@@ -25,6 +23,10 @@ int NMR::ReadPara(char* filename){
          fscanf(fin,"%i",&EDeltaUpMin);
       }else if(strcmp(temp,"EDELTAUPMAX")==0){
          fscanf(fin,"%i",&EDeltaUpMax);
+      }else if(strcmp(temp,"TACUPMIN")==0){
+         fscanf(fin,"%i",&TACUpMin);
+      }else if(strcmp(temp,"TACUPMAX")==0){
+         fscanf(fin,"%i",&TACUpMax);
       }else if(strcmp(temp,"EDOWNMIN")==0){
          fscanf(fin,"%i",&EDownMin);
       }else if(strcmp(temp,"EDOWNMAX")==0){
@@ -33,6 +35,10 @@ int NMR::ReadPara(char* filename){
          fscanf(fin,"%i",&EDeltaDownMin);
       }else if(strcmp(temp,"EDELTADOWNMAX")==0){
          fscanf(fin,"%i",&EDeltaDownMax);
+      }else if(strcmp(temp,"TACDOWNMIN")==0){
+         fscanf(fin,"%i",&TACDownMin);
+      }else if(strcmp(temp,"TACDOWNMAX")==0){
+         fscanf(fin,"%i",&TACDownMax);
       }else if(strcmp(temp,"END")==0){
          break;
       }else {
@@ -110,7 +116,6 @@ void NMR::Loop()
       if(time_present < time_previous){
          time_previous = 0;
       }
-      h1->Fill(time_present - time_previous);
       if(time_present - time_previous < TimeCut){
          time = time + time_present - time_previous;
          //cout<<jentry<<" "<<time_present<<" "<<time_previous<<endl;
@@ -133,21 +138,17 @@ void NMR::Loop()
       //   continue;
       //}
 
-
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
-      if(TAC_Up>500 && TAC_Up<15000 && E_Up>EUpMin && E_Up<EUpMax && E_deltaUp>EDeltaUpMin && E_deltaUp<EDeltaUpMax){
+      if(TAC_Up>TACUpMin && TAC_Up<TACUpMax && E_Up>EUpMin && E_Up<EUpMax && E_deltaUp>EDeltaUpMin && E_deltaUp<EDeltaUpMax){
          GoUp = true;
       }
-      if(TAC_Down>500 && TAC_Down<15000 && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
+      if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
       if(FREQ>2200 && FREQ<2800){
          FREQ = 2500;
-      }
-      if(!GoUp || !GoDown){
-         continue;
       }
       if(GoUp){
          CtsUp[FREQ]++;
