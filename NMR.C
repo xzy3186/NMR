@@ -5,6 +5,8 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 
+TH1F *h1 = new TH1F("h1","h1",2000,0,2000);
+
 int NMR::ReadPara(char* filename){
    InitPara();
    char temp[300];
@@ -13,6 +15,8 @@ int NMR::ReadPara(char* filename){
       fscanf(fin,"%s ",temp);
       if(strcmp(temp,"MODULATION")==0){
          fscanf(fin,"%i",&Mod);
+      }else if(strcmp(temp,"TIMECUT")==0){
+         fscanf(fin,"%i",&TimeCut);
       }else if(strcmp(temp,"EUPMIN")==0){
          fscanf(fin,"%i",&EUpMin);
       }else if(strcmp(temp,"EUPMAX")==0){
@@ -102,13 +106,17 @@ void NMR::Loop()
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-      count++;
       time_present = SR_Clock_UP*pow(2,16)+SR_Clock;
       if(time_present < time_previous){
          time_previous = 0;
       }
-      if(time_present - time_previous < 100){
+      h1->Fill(time_present - time_previous);
+      if(time_present - time_previous < TimeCut){
          time = time + time_present - time_previous;
+         //cout<<jentry<<" "<<time_present<<" "<<time_previous<<endl;
+      }else{
+         time_previous = time_present;
+         continue;
       }
       time_previous = time_present;
       //if(time<6000){
@@ -120,15 +128,11 @@ void NMR::Loop()
 
       CalibGammaH();
       CalibGammaG();
-      h_GammaH_cal->Fill(E_GammaH_cal);
-      h_GammaG_cal->Fill(E_GammaG_cal);
 
       //if(Cut() == 0){
       //   continue;
       //}
 
-      h_EUp->Fill(E_Up);
-      h_EDown->Fill(E_Down);
 
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
@@ -142,13 +146,19 @@ void NMR::Loop()
       if(FREQ>2200 && FREQ<2800){
          FREQ = 2500;
       }
-      if(GoUp && !GoDown){
-         CtsUp[FREQ]++;
-      }else if(!GoUp && GoDown){
-         CtsDown[FREQ]++;
-      }else{
+      if(!GoUp || !GoDown){
          continue;
       }
+      if(GoUp){
+         CtsUp[FREQ]++;
+      }
+      if(GoDown){
+         CtsDown[FREQ]++;
+      }
+      h_GammaH_cal->Fill(E_GammaH_cal);
+      h_GammaG_cal->Fill(E_GammaG_cal);
+      h_EUp->Fill(E_Up);
+      h_EDown->Fill(E_Down);
       freqset.insert(FREQ);
    }
    cout<<endl;
@@ -168,7 +178,7 @@ void NMR::MakeNMR(){
       NumFreq++;
       cout<<NumFreq<<" "<<ffreq<<" "<<fup<<" "<<fdown<<endl;
    }
-   cout<<"Total Data taking time: "<<time/1000/60<<" min."<<endl;
+   cout<<"Total Data taking time: "<<time/1000./60<<" min."<<endl;
    gNMR = new TGraphErrors(NumFreq,gFreq,gAsymm,gFreqErr,gAsymmErr);
    gNMR->SetMarkerStyle(20);
    gNMR->SetLineWidth(0);
