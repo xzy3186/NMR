@@ -218,10 +218,10 @@ void NMR::MakeNMR(){
 
    gTiD3_T = new TGraph(TiD3_T.size());
    gTiD3_T_cut = new TGraph(TiD3_T_cut.size());
-   for(int i=0; i<TiD3_T.size(); i++){
+   for(int i=0; i<(int)TiD3_T.size(); i++){
       gTiD3_T->SetPoint(i, TiD3_T[i].first, TiD3_T[i].second-10);
    }
-   for(int i=0; i<TiD3_T_cut.size(); i++){
+   for(int i=0; i<(int)TiD3_T_cut.size(); i++){
       gTiD3_T_cut->SetPoint(i, TiD3_T_cut[i].first, TiD3_T_cut[i].second);
    }
    gTiD3_T->SetTitle("TiD3");
