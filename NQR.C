@@ -56,12 +56,13 @@ int NQR::ReadFitPara(char* filename){
       fscanf(fin,"%s ",temp);
       if(strcmp(temp,"AMPLITUDE")==0){
          fscanf(fin,"%lf",&Amp);
+         //cout<<"come here"<<endl;
       }else if(strcmp(temp,"BASELINE")==0){
          fscanf(fin,"%lf",&BaseL);
       }else if(strcmp(temp,"WIDTH")==0){
          fscanf(fin,"%lf",&Width);
-      }else if(strcmp(temp,"LARMORFREQ")==0){
-         fscanf(fin,"%lf",&LarmorFreq);
+      }else if(strcmp(temp,"RESONANCEFREQ")==0){
+         fscanf(fin,"%lf",&ResonanceFreq);
       }else if(strcmp(temp,"END")==0){
          break;
       }else {
@@ -103,9 +104,9 @@ void NQR::Loop()
 
    Long64_t nbytes = 0, nb = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
-      if(jentry%10000==0){
+      if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
-         cout<<"\r"<<(double)jentry/nentries*100<<"% of events have been analyzed";
+         //cout<<"\r"<<(double)jentry/nentries*100<<"% of events have been analyzed";
       }
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
@@ -152,6 +153,9 @@ void NQR::Loop()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
+      if(GoUp && GoDown){
+         continue;
+      }
       if(GoUp){
          CtsUp[freq2]++;
       }
@@ -191,19 +195,21 @@ void NQR::MakeNQR(){
    gNQR->SetTitle("NQR");
    gNQR->SetName("NQR");
    //g1->Draw("AP");
+   //FitNQR(100,800);
 }
 
 void NQR::FitNQR(double fit_low, double fit_high){
-   ReadFitPara("NQR_NQR_fit.in");
+   ReadFitPara("NMR_NQR_fit.in");
+   //cout<<"come here"<<endl;
    TF1 *f1=new TF1("f1","[0]+[1]-[1]*pow(0.5/[3],2)*pow(sqrt(pow([2]-x+[3],2) + pow([4],2)) - sqrt(pow([2]-x-[3],2) + pow([4],2)),2)");
    f1->SetParName(0,"Baseline");
    f1->SetParName(1,"Amplitude");
-   f1->SetParName(2,"LarmorFreq");
+   f1->SetParName(2,"ResonanceFreq");
    f1->SetParName(3,"Modulation");
    f1->SetParName(4,"Width");
    f1->SetParameter(0,BaseL);
    f1->SetParameter(1,Amp);
-   f1->SetParameter(2,LarmorFreq);
+   f1->SetParameter(2,ResonanceFreq);
    f1->FixParameter(3,Mod);
    f1->SetParameter(4,Width); f1->SetParLimits(4,0,500);
    gNQR->Fit("f1","EM","D",fit_low,fit_high);
@@ -212,7 +218,7 @@ void NQR::FitNQR(double fit_low, double fit_high){
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
    cout<<"Baseline = "<<f1->GetParameter(0)<<endl;
    cout<<"Amplitude = "<<f1->GetParameter(1)<<endl;
-   cout<<"LarmorFreq = "<<f1->GetParameter(2)<<endl;
+   cout<<"ResonanceFreq = "<<f1->GetParameter(2)<<endl;
    cout<<"Modulation = "<<f1->GetParameter(3)<<endl;
    cout<<"Width = "<<f1->GetParameter(4)<<endl;
 }

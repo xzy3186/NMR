@@ -60,8 +60,8 @@ int NMR::ReadFitPara(char* filename){
          fscanf(fin,"%lf",&BaseL);
       }else if(strcmp(temp,"WIDTH")==0){
          fscanf(fin,"%lf",&Width);
-      }else if(strcmp(temp,"LARMORFREQ")==0){
-         fscanf(fin,"%lf",&LarmorFreq);
+      }else if(strcmp(temp,"RESONANCEFREQ")==0){
+         fscanf(fin,"%lf",&ResonanceFreq);
       }else if(strcmp(temp,"END")==0){
          break;
       }else {
@@ -196,12 +196,12 @@ void NMR::FitNMR(double fit_low, double fit_high){
    TF1 *f1=new TF1("f1","[0]+[1]-[1]*pow(0.5/[3],2)*pow(sqrt(pow([2]-x+[3],2) + pow([4],2)) - sqrt(pow([2]-x-[3],2) + pow([4],2)),2)");
    f1->SetParName(0,"Baseline");
    f1->SetParName(1,"Amplitude");
-   f1->SetParName(2,"LarmorFreq");
+   f1->SetParName(2,"ResonanceFreq");
    f1->SetParName(3,"Modulation");
    f1->SetParName(4,"Width");
    f1->SetParameter(0,BaseL);
    f1->SetParameter(1,Amp);
-   f1->SetParameter(2,LarmorFreq);
+   f1->SetParameter(2,ResonanceFreq);
    f1->FixParameter(3,Mod);
    f1->SetParameter(4,Width); f1->SetParLimits(4,0,500);
    gNMR->Fit("f1","EM","D",fit_low,fit_high);
@@ -210,7 +210,7 @@ void NMR::FitNMR(double fit_low, double fit_high){
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
    cout<<"Baseline = "<<f1->GetParameter(0)<<endl;
    cout<<"Amplitude = "<<f1->GetParameter(1)<<endl;
-   cout<<"LarmorFreq = "<<f1->GetParameter(2)<<endl;
+   cout<<"ResonanceFreq = "<<f1->GetParameter(2)<<endl;
    cout<<"Modulation = "<<f1->GetParameter(3)<<endl;
    cout<<"Width = "<<f1->GetParameter(4)<<endl;
 }

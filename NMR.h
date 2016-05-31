@@ -120,7 +120,7 @@ public :
    int TACDownMin, TACDownMax;
 
    //parameters read from fitting input file
-   double Amp, BaseL, Width, LarmorFreq;
+   double Amp, BaseL, Width, ResonanceFreq;
 
    // List of branches
    TBranch        *b_E_Up;   //!
