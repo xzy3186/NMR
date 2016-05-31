@@ -15,6 +15,8 @@ int NMR::ReadPara(char* filename){
          fscanf(fin,"%i",&Mod);
       }else if(strcmp(temp,"TIMECUT")==0){
          fscanf(fin,"%i",&TimeCut);
+      }else if(strcmp(temp,"TID3CUT")==0){
+         fscanf(fin,"%i",&TiD3Cut);
       }else if(strcmp(temp,"EUPMIN")==0){
          fscanf(fin,"%i",&EUpMin);
       }else if(strcmp(temp,"EUPMAX")==0){
@@ -100,9 +102,10 @@ void NMR::Loop()
    if (fChain == 0) return;
 
    Long64_t nentries = fChain->GetEntriesFast();
-   //cout<<"Total number of events: "<<nentries<<endl;
 
    Long64_t nbytes = 0, nb = 0;
+   Long64_t time_previous = 0, time_present = 0, time_next = 0, time_offset = 0;
+   int TiD3_present = 0, TiD3_previous = 0, TiD3_perSecond = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
@@ -112,11 +115,28 @@ void NMR::Loop()
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-      time_present = SR_Clock_UP*pow(2,16)+SR_Clock;
-      if(time_present < time_previous){
+      bool FillTiD3_T = false;
+
+      time_present = GetTime();
+      if(time_present < time_previous - 100){
+         time_offset = time_offset + time_previous + 1;
          time_previous = 0;
       }
-      if(time_present - time_previous < TimeCut){
+
+      if(time_present + 1000 < time_next){
+         time_next = 0;
+         TiD3_previous = 0;
+      }
+      if(time_present > time_next){
+         TiD3_present = GetTiD3();
+         TiD3_perSecond = TiD3_present - TiD3_previous;
+         TiD3_T.push_back(make_pair((time_present+time_offset)/1000, TiD3_perSecond) ); //TiD3 monitor, before cut
+         FillTiD3_T = true;
+         time_next = time_present + 1000;
+         TiD3_previous = TiD3_present;
+      }
+
+      if(time_present - time_previous < TimeCut && TiD3_perSecond > TiD3Cut){ //cut on TiD3 and the time interval between two successive events
          time = time + time_present - time_previous;
          //cout<<jentry<<" "<<time_present<<" "<<time_previous<<endl;
       }else{
@@ -124,6 +144,9 @@ void NMR::Loop()
          continue;
       }
       time_previous = time_present;
+      if(FillTiD3_T){
+         TiD3_T_cut.push_back(make_pair((time_offset+time_present)/1000, TiD3_perSecond) ); //TiD3 monitor, after cut
+      }
       //if(time<6000){
       //   continue;
       //}
@@ -149,6 +172,9 @@ void NMR::Loop()
       //just for test, to sum RF-OFF freq at different position.
       if(FREQ>2200 && FREQ<2800){
          FREQ = 2500;
+      }
+      if(GoUp && GoDown){
+         continue;
       }
       if(GoUp){
          CtsUp[FREQ]++;
@@ -189,6 +215,25 @@ void NMR::MakeNMR(){
    gNMR->SetTitle("NMR");
    gNMR->SetName("NMR");
    //g1->Draw("AP");
+
+   gTiD3_T = new TGraph(TiD3_T.size());
+   gTiD3_T_cut = new TGraph(TiD3_T_cut.size());
+   for(int i=0; i<TiD3_T.size(); i++){
+      gTiD3_T->SetPoint(i, TiD3_T[i].first, TiD3_T[i].second-10);
+   }
+   for(int i=0; i<TiD3_T_cut.size(); i++){
+      gTiD3_T_cut->SetPoint(i, TiD3_T_cut[i].first, TiD3_T_cut[i].second);
+   }
+   gTiD3_T->SetTitle("TiD3");
+   gTiD3_T->SetName("TiD3");
+   gTiD3_T->SetMarkerStyle(20);
+   gTiD3_T->SetMarkerColor(1);
+   gTiD3_T->SetLineColor(1);
+   gTiD3_T_cut->SetTitle("TiD3_cut");
+   gTiD3_T_cut->SetName("TiD3_cut");
+   gTiD3_T_cut->SetMarkerStyle(20);
+   gTiD3_T_cut->SetMarkerColor(2);
+   gTiD3_T_cut->SetLineColor(2);
 }
 
 void NMR::FitNMR(double fit_low, double fit_high){

@@ -15,6 +15,7 @@
 #include <TH1.h>
 #include <iostream>
 #include <set>
+#include <vector>
 
 // Header file for the classes stored in the TTree if any.
 
@@ -85,10 +86,12 @@ public :
    int NumFreq;
    double gFreq[30], gAsymm[30], gFreqErr[30], gAsymmErr[30];
    int CtsUp[5000], CtsDown[5000];
-   Long64_t time, time_previous, time_present;
+   Long64_t time;
    std::set<int> freqset;
    std::set<int>::iterator itfreqset;
+   vector < pair<Long64_t, int> > TiD3_T, TiD3_T_cut;
    TGraphErrors *gNMR;
+   TGraph *gTiD3_T, *gTiD3_T_cut;
    TH1F *h_GammaH_cal, *h_GammaG_cal;
    TH1F *h_EUp, *h_EDown;
    //TH1F *h_TAC_delta_gH, *h_TAC_delta_gG;
@@ -112,6 +115,7 @@ public :
    //parameters read from input file
    int Mod;
    int TimeCut;
+   int TiD3Cut;
    int EUpMin, EUpMax;
    int EDeltaUpMin, EDeltaUpMax;
    int TACUpMin, TACUpMax;
@@ -193,6 +197,10 @@ public :
    virtual void     CalibGammaG();
    virtual void     MakeNMR();
    virtual void     FitNMR(double fit_low, double fit_high);
+   virtual Long64_t GetTime();
+   virtual Long64_t GetTACUpScalar();
+   virtual Long64_t GetTACDownScalar();
+   virtual Long64_t GetTiD3();
 };
 
 #endif
@@ -244,8 +252,6 @@ void NMR::InitPara(){
    E_GammaH_cal = 0;
    E_GammaG_cal = 0;
    time = 0;
-   time_previous = 0;
-   time_present = 0;
    for(int i=0; i<30; i++){
       gFreq[i]=0;
       gAsymm[i]=0;
@@ -263,6 +269,8 @@ void NMR::InitPara(){
    h_EDown = new TH1F("h_EDown","h_EDown",1600,0,16000);
    //h_TAC_delta_gH = new TH1F("h_TAC_delta_gH","h_TAC_delta_gH",1600,0,16000);
    //h_TAC_delta_gG = new TH1F("h_TAC_delta_gG","h_TAC_delta_gG",1600,0,16000);
+   TiD3_T.clear();
+   TiD3_T_cut.clear();
 
    a1_GammaH_L = 0.263796;  //slope for April 2016 
    a2_GammaH_L = 0.264627;  //slope for April 2016 
@@ -411,5 +419,21 @@ Int_t NMR::Cut()
    }else{
       return 0;
    }
+}
+
+Long64_t NMR::GetTime(){
+   return SR_Clock_UP*pow(2,16)+SR_Clock;
+}
+
+Long64_t NMR::GetTACUpScalar(){
+   return SR_TACUp_UP*pow(2,16)+SR_TACUp;
+}
+
+Long64_t NMR::GetTACDownScalar(){
+   return SR_TACDown_UP*pow(2,16)+SR_TACDown;
+}
+
+Long64_t NMR::GetTiD3(){
+   return SR_TiD3_UP*pow(2,16)+SR_TiD3;
 }
 #endif // #ifdef NMR_cxx
