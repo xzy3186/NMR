@@ -248,17 +248,17 @@ void NQR::FitNQR(double fit_low, double fit_high){
    f1->SetParName(3,"Modulation");
    f1->SetParName(4,"Width");
    f1->SetParameter(0,BaseL);
-   f1->SetParameter(1,Amp);
+   f1->SetParameter(1,Amp); f1->SetParLimits(1,0,1);
    f1->SetParameter(2,ResonanceFreq);
    f1->FixParameter(3,Mod);
-   f1->SetParameter(4,Width); f1->SetParLimits(4,0,500);
+   f1->SetParameter(4,Width); f1->SetParLimits(4,10,500);
    gNQR->Fit("f1","EM","D",fit_low,fit_high);
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
-   cout<<"Baseline = "<<f1->GetParameter(0)<<endl;
-   cout<<"Amplitude = "<<f1->GetParameter(1)<<endl;
-   cout<<"ResonanceFreq = "<<f1->GetParameter(2)<<endl;
-   cout<<"Modulation = "<<f1->GetParameter(3)<<endl;
-   cout<<"Width = "<<f1->GetParameter(4)<<endl;
+   cout<<"Baseline = "<<f1->GetParameter(0)<<" +/- "<<f1->GetParError(0)<<endl;
+   cout<<"Amplitude = "<<f1->GetParameter(1)<<" +/- "<<f1->GetParError(1)<<endl;
+   cout<<"ResonanceFreq = "<<f1->GetParameter(2)<<" +/- "<<f1->GetParError(2)<<endl;
+   cout<<"Modulation = "<<f1->GetParameter(3)<<" +/- "<<f1->GetParError(3)<<endl;
+   cout<<"Width = "<<f1->GetParameter(4)<<" +/- "<<f1->GetParError(4)<<endl;
 }
