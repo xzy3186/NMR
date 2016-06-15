@@ -176,6 +176,10 @@ void NQR::Loop()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
+      ////just for test, to sum RF-OFF freq at different position.
+      //if(freq2>1200 && freq2<2500){
+      //   freq2 = 1900;
+      //}
       if(GoUp && GoDown){
          continue;
       }
@@ -248,7 +252,7 @@ void NQR::FitNQR(double fit_low, double fit_high){
    f1->SetParName(3,"Modulation");
    f1->SetParName(4,"Width");
    f1->SetParameter(0,BaseL);
-   f1->SetParameter(1,Amp); f1->SetParLimits(1,0,1);
+   f1->SetParameter(1,Amp); f1->SetParLimits(1,0,0.5);
    f1->SetParameter(2,ResonanceFreq);
    f1->FixParameter(3,Mod);
    f1->SetParameter(4,Width); f1->SetParLimits(4,10,500);

@@ -248,7 +248,7 @@ void NMR::FitNMR(double fit_low, double fit_high){
    f1->SetParameter(1,Amp); f1->SetParLimits(1,0,1);
    f1->SetParameter(2,ResonanceFreq);
    f1->FixParameter(3,Mod);
-   f1->SetParameter(4,Width); f1->SetParLimits(4,10,500);
+   f1->SetParameter(4,Width); f1->SetParLimits(4,20,100);
    gNMR->Fit("f1","EM","D",fit_low,fit_high);
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
