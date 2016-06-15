@@ -157,9 +157,9 @@ void NQR::Loop()
       CalibGammaH();
       CalibGammaG();
 
-      //if(Cut() == 0){
-      //   continue;
-      //}
+      if(Cut() == 0){
+         continue;
+      }
 
       int freq2;
       if(RF_OFF_ON==1000){

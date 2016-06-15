@@ -407,11 +407,11 @@ Int_t NQR::Cut()
 // returns  1 if entry is accepted.
 // returns -1 otherwise.
    int bGammaH = 0;
-   if((E_GammaH_cal>926 && E_GammaH_cal<934)||(E_GammaH_cal>505 && E_GammaH_cal<515)){
+   if(E_GammaH_cal>506 && E_GammaH_cal<516){
       bGammaH = 1;
    }
    int bGammaG = 0;
-   if((E_GammaG_cal>926 && E_GammaG_cal<934)||(E_GammaG_cal>505 && E_GammaG_cal<515)){
+   if(E_GammaG_cal>506 && E_GammaG_cal<516){
       bGammaG = 1;
    }
    if(bGammaH || bGammaG){

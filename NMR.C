@@ -157,9 +157,9 @@ void NMR::Loop()
       CalibGammaH();
       CalibGammaG();
 
-      //if(Cut() == 0){
-      //   continue;
-      //}
+      if(Cut() == 0){
+         continue;
+      }
 
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
@@ -170,11 +170,12 @@ void NMR::Loop()
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
-      //if(FREQ>2200 && FREQ<2800){
-      //   FREQ = 2500;
-      //}
+      if(FREQ>2200 && FREQ<2800){
+         FREQ = 2500;
+      }
       if(GoUp && GoDown){
-         continue;
+         //continue;
+         cout<<"Both beta UP and DOWN were fired."<<endl;
       }
       if(GoUp){
          CtsUp[FREQ]++;
