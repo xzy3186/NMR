@@ -106,6 +106,7 @@ void NMR::Loop()
    Long64_t nbytes = 0, nb = 0;
    Long64_t time_previous = 0, time_present = 0, time_next = 0, time_offset = 0;
    int TiD3_present = 0, TiD3_previous = 0, TiD3_perSecond = 0;
+   int count = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
@@ -157,9 +158,9 @@ void NMR::Loop()
       CalibGammaH();
       CalibGammaG();
 
-      if(Cut() == 0){
-         continue;
-      }
+      //if(Cut() == 0){
+      //   continue;
+      //}
 
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
@@ -169,14 +170,15 @@ void NMR::Loop()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      //just for test, to sum RF-OFF freq at different position.
-      if(FREQ>2200 && FREQ<2800){
-         FREQ = 2500;
-      }
+      ////just for test, to sum RF-OFF freq at different position.
+      //if(FREQ>2200 && FREQ<2800){
+      //   FREQ = 2500;
+      //}
       if(GoUp && GoDown){
-         //continue;
-         cout<<"Both beta UP and DOWN were fired."<<endl;
+         count++;
+         continue;
       }
+
       if(GoUp){
          CtsUp[FREQ]++;
       }
@@ -189,7 +191,7 @@ void NMR::Loop()
       h_EDown->Fill(E_Down);
       freqset.insert(FREQ);
    }
-   cout<<endl;
+   cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
 }
 
 void NMR::MakeNMR(){
