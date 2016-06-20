@@ -4,6 +4,9 @@
 #include <TF1.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <TLatex.h>
+#include <TText.h>
+#include <TString.h>
 
 int NMR::ReadPara(char* filename){
    InitPara();
@@ -239,6 +242,22 @@ void NMR::MakeNMR(){
    gTiD3_T_cut->SetLineColor(2);
 }
 
+void SetLatex(TString &content, char* parname, double para, double error, char* unit = ""){
+   content = parname;
+   content += " = ";
+   char tpara[200], terror[200]; //truncated value
+   sprintf(tpara, "%.1f", para);
+   sprintf(terror, "%.1f", error);
+   content += tpara;
+   if(error != 0){
+      content += " +/- ";
+      content += terror;
+   }
+   content += " ";
+   content += unit;
+   //cout<<"come here"<<endl;
+}
+
 void NMR::FitNMR(double fit_low, double fit_high){
    ReadFitPara("NMR_NQR_fit.in");
    TF1 *f1=new TF1("f1","[0]+[1]-[1]*pow(0.5/[3],2)*pow(sqrt(pow([2]-x+[3],2) + pow([4],2)) - sqrt(pow([2]-x-[3],2) + pow([4],2)),2)");
@@ -261,5 +280,31 @@ void NMR::FitNMR(double fit_low, double fit_high){
    cout<<"ResonanceFreq = "<<f1->GetParameter(2)<<" +/- "<<f1->GetParError(2)<<endl;
    cout<<"Modulation = "<<f1->GetParameter(3)<<" +/- "<<f1->GetParError(3)<<endl;
    cout<<"Width = "<<f1->GetParameter(4)<<" +/- "<<f1->GetParError(4)<<endl;
-}
 
+   if(gROOT->FindObject("c2")!=0){
+      gROOT->FindObject("c2")->Delete();
+   }
+   TCanvas* c2 = new TCanvas("c2","c2",0,0,800,500);
+   c2->cd();
+   gNMR->Draw("AP");
+
+   //plot the fitting result to figure
+   TLatex text0;
+   TString content0;
+   text0.SetTextSize(0.03);
+   text0.SetTextAlign(13);
+   text0.SetNDC();
+
+   SetLatex(content0,"E_Up_cut",EUpMin,0,"[ch]");
+   text0.DrawLatex(0.15,0.85,content0);
+   SetLatex(content0,"E_Down_cut",EDownMin,0,"[ch]");
+   text0.DrawLatex(0.15,0.80,content0);
+   SetLatex(content0,"Resonance",f1->GetParameter(2),f1->GetParError(2),"[kHz]");
+   text0.DrawLatex(0.15,0.75,content0);
+   SetLatex(content0,"Width",f1->GetParameter(4),f1->GetParError(4),"[kHz]");
+   text0.DrawLatex(0.15,0.70,content0);
+   SetLatex(content0,"Amplitude",f1->GetParameter(1)*1000,f1->GetParError(1)*1000,"[x10^{-3}]");
+   text0.DrawLatex(0.15,0.65,content0);
+   SetLatex(content0,"Baseline",f1->GetParameter(0)*1000,f1->GetParError(0)*1000,"[x10^{-3}]");
+   text0.DrawLatex(0.15,0.60,content0);
+}

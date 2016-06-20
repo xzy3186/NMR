@@ -1,6 +1,6 @@
 {
-   gROOT->ProcessLine(".L NMR.C+");
-   //gROOT->ProcessLine(".L NQR.C+");
+   //gROOT->ProcessLine(".L NMR.C+");
+   gROOT->ProcessLine(".L NQR.C+");
    TChain *AutoTree = new TChain ("AutoTree");
    /******* NMR Runs ********/
    //AutoTree->Add("root-files/r0087.root");
@@ -32,7 +32,7 @@
    //AutoTree->Add("root-files/r0143.root");
    //AutoTree->Add("root-files/r0145.root");
    //AutoTree->Add("root-files/r0146.root");
-   AutoTree->Add("root-files/r0154.root");
+   //AutoTree->Add("root-files/r0154.root");
    //AutoTree->Add("root-files/r0157.root");
    //AutoTree->Add("root-files/r0158.root");
    //AutoTree->Add("root-files/r0159.root");
@@ -63,8 +63,8 @@
    //AutoTree->Add("root-files/r0103.root");
    //AutoTree->Add("root-files/r0105.root");
    //AutoTree->Add("root-files/r0107.root");
-   //AutoTree->Add("root-files/r0155.root");
-   //AutoTree->Add("root-files/r0156.root");
+   AutoTree->Add("root-files/r0155.root");
+   AutoTree->Add("root-files/r0156.root");
    //AutoTree->Add("root-files/r0193.root");
    //AutoTree->Add("root-files/r0194.root");
    //AutoTree->Add("root-files/r0195.root");
@@ -80,17 +80,17 @@
    //AutoTree->Add("root-files/r0209.root");
    //AutoTree->Add("root-files/r0210.root");
 
-   NMR *t = new NMR("",AutoTree);
-   //NQR *t = new NQR("",AutoTree);
+   //NMR *t = new NMR("",AutoTree);
+   NQR *t = new NQR("",AutoTree);
    t->ReadPara("NMR_NQR.in");
    t->Loop();
-   t->MakeNMR();
-   //t->MakeNQR();
+   //t->MakeNMR();
+   t->MakeNQR();
    TCanvas *c1 = new TCanvas("c1","c1",0,0,800,1000);
    c1->Divide(1,2);
    c1->cd(1);
-   t->gNMR->Draw("AP");
-   //t->gNQR->Draw("AP");
+   //t->gNMR->Draw("AP");
+   t->gNQR->Draw("AP");
    c1->cd(2);
    t->gTiD3_T->Draw("APL");
    t->gTiD3_T_cut->Draw("PL");
