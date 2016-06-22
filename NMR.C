@@ -8,6 +8,8 @@
 #include <TText.h>
 #include <TString.h>
 
+#include "lineshape.h"
+
 int NMR::ReadPara(char* filename){
    InitPara();
    char temp[300];
@@ -258,19 +260,26 @@ void SetLatex(TString &content, char* parname, double para, double error, char* 
    //cout<<"come here"<<endl;
 }
 
-void NMR::FitNMR(double fit_low, double fit_high){
+void NMR::FitNMR(int type, double fit_low, double fit_high){
    ReadFitPara("NMR_NQR_fit.in");
-   TF1 *f1=new TF1("f1","[0]+[1]-[1]*pow(0.5/[3],2)*pow(sqrt(pow([2]-x+[3],2) + pow([4],2)) - sqrt(pow([2]-x-[3],2) + pow([4],2)),2)");
+   TF1 *f1;
+   if(type == 0){
+      f1 = new TF1("f1",LineShapeMarieke,fit_low,fit_high,5);
+   }else if(type == 1){
+      f1 = new TF1("f1",LineShapeRamp,fit_low,fit_high,5);
+   }else{
+      f1 = new TF1("f1",LineShapeSine,fit_low,fit_high,5);
+   }
    f1->SetParName(0,"Baseline");
    f1->SetParName(1,"Amplitude");
-   f1->SetParName(2,"ResonanceFreq");
+   f1->SetParName(2,"Centroid");
    f1->SetParName(3,"Modulation");
    f1->SetParName(4,"Width");
    f1->SetParameter(0,BaseL);
    f1->SetParameter(1,Amp); f1->SetParLimits(1,0,1);
    f1->SetParameter(2,ResonanceFreq);
    f1->FixParameter(3,Mod);
-   f1->SetParameter(4,Width); f1->SetParLimits(4,20,100);
+   f1->SetParameter(4,Width); f1->SetParLimits(4,1,150);
    gNMR->Fit("f1","EM","D",fit_low,fit_high);
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
@@ -299,7 +308,7 @@ void NMR::FitNMR(double fit_low, double fit_high){
    text0.DrawLatex(0.15,0.85,content0);
    SetLatex(content0,"E_Down_cut",EDownMin,0,"[ch]");
    text0.DrawLatex(0.15,0.80,content0);
-   SetLatex(content0,"Resonance",f1->GetParameter(2),f1->GetParError(2),"[kHz]");
+   SetLatex(content0,"Centroid",f1->GetParameter(2),f1->GetParError(2),"[kHz]");
    text0.DrawLatex(0.15,0.75,content0);
    SetLatex(content0,"Width",f1->GetParameter(4),f1->GetParError(4),"[kHz]");
    text0.DrawLatex(0.15,0.70,content0);

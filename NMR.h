@@ -196,7 +196,7 @@ public :
    virtual void     CalibGammaH();
    virtual void     CalibGammaG();
    virtual void     MakeNMR();
-   virtual void     FitNMR(double fit_low, double fit_high);
+   virtual void     FitNMR(int type, double fit_low, double fit_high);
    virtual Long64_t GetTime();
    virtual Long64_t GetTACUpScalar();
    virtual Long64_t GetTACDownScalar();
