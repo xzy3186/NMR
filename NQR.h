@@ -113,7 +113,6 @@ public :
    double c2_GammaG_L;   //2nd-order term for 2016
 
    //parameters read from input file
-   int Mod;
    int TimeCut;
    int TiD3Cut;
    int EUpMin, EUpMax;
@@ -124,7 +123,9 @@ public :
    int TACDownMin, TACDownMax;
 
    //parameters read from fitting input file
-   double Amp, BaseL, Width, ResonanceFreq;
+   double Amp, BaseL, Width, Centroid, Mod;
+   double Amp_low, BaseL_low, Width_low, Centroid_low, Mod_low;
+   double Amp_high, BaseL_high, Width_high, Centroid_high, Mod_high;
 
    // List of branches
    TBranch        *b_E_Up;   //!

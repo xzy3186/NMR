@@ -5,7 +5,10 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TLatex.h>
+#include <TText.h>
 #include <TString.h>
+
+#include "lineshape.h"
 
 int NQR::ReadPara(char* filename){
    InitPara();
@@ -13,9 +16,7 @@ int NQR::ReadPara(char* filename){
    FILE *fin = fopen(filename,"r");
    while(!feof(fin)){
       fscanf(fin,"%s ",temp);
-      if(strcmp(temp,"MODULATION")==0){
-         fscanf(fin,"%i",&Mod);
-      }else if(strcmp(temp,"TIMECUT")==0){
+      if(strcmp(temp,"TIMECUT")==0){
          fscanf(fin,"%i",&TimeCut);
       }else if(strcmp(temp,"TID3CUT")==0){
          fscanf(fin,"%i",&TiD3Cut);
@@ -59,13 +60,15 @@ int NQR::ReadFitPara(char* filename){
    while(!feof(fin)){
       fscanf(fin,"%s ",temp);
       if(strcmp(temp,"AMPLITUDE")==0){
-         fscanf(fin,"%lf",&Amp);
+         fscanf(fin,"%lf %lf %lf",&Amp,&Amp_low,&Amp_high);
       }else if(strcmp(temp,"BASELINE")==0){
-         fscanf(fin,"%lf",&BaseL);
+         fscanf(fin,"%lf %lf %lf",&BaseL,&BaseL_low,&BaseL_high);
       }else if(strcmp(temp,"WIDTH")==0){
-         fscanf(fin,"%lf",&Width);
-      }else if(strcmp(temp,"RESONANCEFREQ")==0){
-         fscanf(fin,"%lf",&ResonanceFreq);
+         fscanf(fin,"%lf %lf %lf",&Width,&Width_low,&Width_high);
+      }else if(strcmp(temp,"MODULATION")==0){
+         fscanf(fin,"%lf %lf %lf",&Mod,&Mod_low,&Mod_high);
+      }else if(strcmp(temp,"CENTROID")==0){
+         fscanf(fin,"%lf %lf %lf",&Centroid,&Centroid_low,&Centroid_high);
       }else if(strcmp(temp,"END")==0){
          break;
       }else {
@@ -108,6 +111,7 @@ void NQR::Loop()
    Long64_t nbytes = 0, nb = 0;
    Long64_t time_previous = 0, time_present = 0, time_next = 0, time_offset = 0;
    int TiD3_present = 0, TiD3_previous = 0, TiD3_perSecond = 0;
+   int count = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
@@ -197,7 +201,7 @@ void NQR::Loop()
       h_EDown->Fill(E_Down);
       freqset.insert(freq2);
    }
-   cout<<endl;
+   cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
 }
 
 void NQR::MakeNQR(){
@@ -276,18 +280,18 @@ void NQR::FitNQR(int type, double fit_low, double fit_high){
    f1->SetParName(2,"Centroid");
    f1->SetParName(3,"Modulation");
    f1->SetParName(4,"Width");
-   f1->SetParameter(0,BaseL);
-   f1->SetParameter(1,Amp); f1->SetParLimits(1,0,0.5);
-   f1->SetParameter(2,ResonanceFreq);
-   f1->FixParameter(3,Mod);
-   f1->SetParameter(4,Width); f1->SetParLimits(4,10,500);
-   gNQR->Fit("f1","EM","D",fit_low,fit_high);
+   f1->SetParameter(0,BaseL); f1->SetParLimits(0,BaseL_low,BaseL_high);
+   f1->SetParameter(1,Amp); f1->SetParLimits(1,Amp_low,Amp_high);
+   f1->SetParameter(2,Centroid); f1->SetParLimits(2,Centroid_low,Centroid_high);
+   f1->SetParameter(3,Mod); f1->SetParLimits(3,Mod_low,Mod_high);
+   f1->SetParameter(4,Width); f1->SetParLimits(4,Width_low,Width_high);
+   gNQR->Fit("f1","EMR","D");
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
    cout<<"Baseline = "<<f1->GetParameter(0)<<" +/- "<<f1->GetParError(0)<<endl;
    cout<<"Amplitude = "<<f1->GetParameter(1)<<" +/- "<<f1->GetParError(1)<<endl;
-   cout<<"ResonanceFreq = "<<f1->GetParameter(2)<<" +/- "<<f1->GetParError(2)<<endl;
+   cout<<"Centroid = "<<f1->GetParameter(2)<<" +/- "<<f1->GetParError(2)<<endl;
    cout<<"Modulation = "<<f1->GetParameter(3)<<" +/- "<<f1->GetParError(3)<<endl;
    cout<<"Width = "<<f1->GetParameter(4)<<" +/- "<<f1->GetParError(4)<<endl;
 
