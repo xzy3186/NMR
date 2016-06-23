@@ -213,7 +213,8 @@ void NQR::MakeNQR(){
       int fup = CtsUp[ffreq], fdown = CtsDown[ffreq];
       gFreq[NumFreq] = ffreq;
       gAsymm[NumFreq] = (double)(fup - fdown)/(fup + fdown);
-      gFreqErr[NumFreq] = Mod;
+      //gFreqErr[NumFreq] = Mod;
+      gFreqErr[NumFreq] = 0;
       gAsymmErr[NumFreq] = sqrt(4.0*fup*fdown/pow(fup+fdown,3));
       NumFreq++;
       cout<<NumFreq<<" "<<ffreq<<" "<<fup<<" "<<fdown<<endl;
