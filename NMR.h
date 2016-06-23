@@ -90,7 +90,7 @@ public :
    std::set<int> freqset;
    std::set<int>::iterator itfreqset;
    vector < pair<Long64_t, int> > TiD3_T, TiD3_T_cut;
-   TGraphErrors *gNMR;
+   TGraphErrors *gSpec;
    TGraph *gTiD3_T, *gTiD3_T_cut;
    TH1F *h_GammaH_cal, *h_GammaG_cal;
    TH1F *h_EUp, *h_EDown;
@@ -113,6 +113,7 @@ public :
    double c2_GammaG_L;   //2nd-order term for 2016
 
    //parameters read from input file
+   int NMRorNQR; //0: NMR, 1: NQR
    int TimeCut;
    int TiD3Cut;
    int EUpMin, EUpMax;
@@ -196,8 +197,8 @@ public :
    virtual int      ReadFitPara(char* filename);
    virtual void     CalibGammaH();
    virtual void     CalibGammaG();
-   virtual void     MakeNMR();
-   virtual void     FitNMR(int type, double fit_low, double fit_high);
+   virtual void     MakeSpec();
+   virtual void     FitSpec(int type, double fit_low, double fit_high);
    virtual Long64_t GetTime();
    virtual Long64_t GetTACUpScalar();
    virtual Long64_t GetTACDownScalar();

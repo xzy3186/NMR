@@ -16,7 +16,11 @@ int NMR::ReadPara(char* filename){
    FILE *fin = fopen(filename,"r");
    while(!feof(fin)){
       fscanf(fin,"%s ",temp);
-      if(strcmp(temp,"TIMECUT")==0){
+      if(strcmp(temp,"NMR")==0){
+         NMRorNQR = 0;
+      }else if(strcmp(temp,"NQR")==0){
+         NMRorNQR = 1;
+      }else if(strcmp(temp,"TIMECUT")==0){
          fscanf(fin,"%i",&TimeCut);
       }else if(strcmp(temp,"TID3CUT")==0){
          fscanf(fin,"%i",&TiD3Cut);
@@ -166,6 +170,18 @@ void NMR::Loop()
       //if(Cut() == 0){
       //   continue;
       //}
+      int freq;
+      if(NMRorNQR==0){//NMR data
+         freq = FREQ;
+      }else if(NMRorNQR==1){//NRQ data
+         if(RF_OFF_ON==1000){
+            freq = FREQ2;
+         }else{
+            freq = FREQ;
+         }
+      }else{
+         break;
+      }
 
       // if (Cut(ientry) < 0) continue;
       bool GoUp = false, GoDown = false;
@@ -175,31 +191,31 @@ void NMR::Loop()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      ////just for test, to sum RF-OFF freq at different position.
-      //if(FREQ>2200 && FREQ<2800){
-      //   FREQ = 2500;
-      //}
+      //just for test, to sum RF-OFF freq at different position.
+      if(freq>1400 && freq<2500){
+         freq = 1900;
+      }
       if(GoUp && GoDown){
          count++;
          continue;
       }
 
       if(GoUp){
-         CtsUp[FREQ]++;
+         CtsUp[freq]++;
       }
       if(GoDown){
-         CtsDown[FREQ]++;
+         CtsDown[freq]++;
       }
       h_GammaH_cal->Fill(E_GammaH_cal);
       h_GammaG_cal->Fill(E_GammaG_cal);
       h_EUp->Fill(E_Up);
       h_EDown->Fill(E_Down);
-      freqset.insert(FREQ);
+      freqset.insert(freq);
    }
    cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
 }
 
-void NMR::MakeNMR(){
+void NMR::MakeSpec(){
    NumFreq = 0;
 
    cout<< freqset.size() <<" frequencies found:"<< endl;
@@ -215,14 +231,22 @@ void NMR::MakeNMR(){
       cout<<NumFreq<<" "<<ffreq<<" "<<fup<<" "<<fdown<<endl;
    }
    cout<<"Total Data taking time: "<<time/1000./60<<" min."<<endl;
-   gNMR = new TGraphErrors(NumFreq,gFreq,gAsymm,gFreqErr,gAsymmErr);
-   gNMR->SetMarkerStyle(20);
-   gNMR->SetLineWidth(0);
-   gNMR->SetMarkerSize(1);
-   gNMR->GetXaxis()->SetTitle("Freq. [kHz]");
-   gNMR->GetYaxis()->SetTitle("Asymm.");
-   gNMR->SetTitle("NMR");
-   gNMR->SetName("NMR");
+   gSpec = new TGraphErrors(NumFreq,gFreq,gAsymm,gFreqErr,gAsymmErr);
+   gSpec->SetMarkerStyle(20);
+   gSpec->SetLineWidth(0);
+   gSpec->SetMarkerSize(1);
+   gSpec->GetXaxis()->SetTitle("Freq. [kHz]");
+   gSpec->GetYaxis()->SetTitle("Asymm.");
+   if(NMRorNQR==0){
+      gSpec->SetTitle("NMR");
+      gSpec->SetName("NMR");
+   }else if(NMRorNQR==1){
+      gSpec->SetTitle("NQR");
+      gSpec->SetName("NQR");
+   }else{
+      return;
+   }
+
    //g1->Draw("AP");
 
    gTiD3_T = new TGraph(TiD3_T.size());
@@ -261,7 +285,7 @@ void SetLatex(TString &content, char* parname, double para, double error, char* 
    //cout<<"come here"<<endl;
 }
 
-void NMR::FitNMR(int type, double fit_low, double fit_high){
+void NMR::FitSpec(int type, double fit_low, double fit_high){
    ReadFitPara("NMR_NQR_fit.in");
    TF1 *f1;
    if(type == 0){
@@ -281,7 +305,7 @@ void NMR::FitNMR(int type, double fit_low, double fit_high){
    f1->SetParameter(2,Centroid); f1->SetParLimits(2,Centroid_low,Centroid_high);
    f1->SetParameter(3,Mod); f1->SetParLimits(3,Mod_low,Mod_high);
    f1->SetParameter(4,Width); f1->SetParLimits(4,Width_low,Width_high);
-   gNMR->Fit("f1","EMR","D");
+   gSpec->Fit("f1","EMR","D");
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
@@ -296,7 +320,7 @@ void NMR::FitNMR(int type, double fit_low, double fit_high){
    }
    TCanvas* c2 = new TCanvas("c2","c2",0,0,800,500);
    c2->cd();
-   gNMR->Draw("AP");
+   gSpec->Draw("AP");
 
    //plot the fitting result to figure
    TLatex text0;
@@ -305,16 +329,24 @@ void NMR::FitNMR(int type, double fit_low, double fit_high){
    text0.SetTextAlign(13);
    text0.SetNDC();
 
+   double posx;
+   if(NMRorNQR==0){
+      posx = 0.15;
+   }else if(NMRorNQR==1){
+      posx = 0.55;
+   }else{
+      return;
+   }
    SetLatex(content0,"E_Up_cut",EUpMin,0,"[ch]");
-   text0.DrawLatex(0.15,0.85,content0);
+   text0.DrawLatex(posx,0.85,content0);
    SetLatex(content0,"E_Down_cut",EDownMin,0,"[ch]");
-   text0.DrawLatex(0.15,0.80,content0);
+   text0.DrawLatex(posx,0.80,content0);
    SetLatex(content0,"Centroid",f1->GetParameter(2),f1->GetParError(2),"[kHz]");
-   text0.DrawLatex(0.15,0.75,content0);
+   text0.DrawLatex(posx,0.75,content0);
    SetLatex(content0,"Width",f1->GetParameter(4),f1->GetParError(4),"[kHz]");
-   text0.DrawLatex(0.15,0.70,content0);
+   text0.DrawLatex(posx,0.70,content0);
    SetLatex(content0,"Amplitude",f1->GetParameter(1)*1000,f1->GetParError(1)*1000,"[x10^{-3}]");
-   text0.DrawLatex(0.15,0.65,content0);
+   text0.DrawLatex(posx,0.65,content0);
    SetLatex(content0,"Baseline",f1->GetParameter(0)*1000,f1->GetParError(0)*1000,"[x10^{-3}]");
-   text0.DrawLatex(0.15,0.60,content0);
+   text0.DrawLatex(posx,0.60,content0);
 }
