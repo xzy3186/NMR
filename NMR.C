@@ -358,3 +358,14 @@ double gFactorNMR(double LarmorFreq, double MagField){//larmor freq. in the unit
    return gfn;
 }
 
+void A_Divided_by_B(double A, double Aerr, double B, double Berr){
+   double C = A/B;
+   double Cerr = sqrt(Aerr*Aerr/A/A+Berr*Berr/B/B)*C;
+   cout<<"C = "<<C<<", error = "<<Cerr<<endl;
+}
+
+void A_Times_B(double A, double Aerr, double B, double Berr){
+   double C = A*B;
+   double Cerr = sqrt(Aerr*Aerr/A/A+Berr*Berr/B/B)*C;
+   cout<<"C = "<<C<<", error = "<<Cerr<<endl;
+}
