@@ -269,6 +269,21 @@ void NMR::MakeSpec(){
    gTiD3_T_cut->SetLineColor(2);
 }
 
+void NMR::PlotSpec(){
+   TCanvas *c1;
+   if(gROOT->FindObject("c1")!=0){
+      gROOT->FindObject("c1")->Clear();
+      gROOT->FindObject("c1")->Delete();
+   }
+   c1 = new TCanvas("c1","c1",0,0,800,1000);
+   c1->Divide(1,2);
+   c1->cd(1);
+   gSpec->Draw("AP");
+   c1->cd(2);
+   gTiD3_T->Draw("APL");
+   gTiD3_T_cut->Draw("PL");
+}
+
 void SetLatex(TString &content, const char* parname, double para, double error, const char* unit = ""){
    content = parname;
    content += " = ";

@@ -69,11 +69,11 @@
    //AutoTree->Add("root-files/r0187.root");
 
    /******* NQR Runs ********/
-   AutoTree->Add("root-files/r0103.root");
-   AutoTree->Add("root-files/r0105.root");
-   AutoTree->Add("root-files/r0107.root");
-   //AutoTree->Add("root-files/r0155.root");
-   //AutoTree->Add("root-files/r0156.root");
+   //AutoTree->Add("root-files/r0103.root");
+   //AutoTree->Add("root-files/r0105.root");
+   //AutoTree->Add("root-files/r0107.root");
+   AutoTree->Add("root-files/r0155.root");
+   AutoTree->Add("root-files/r0156.root");
    //AutoTree->Add("root-files/r0193.root");
    //AutoTree->Add("root-files/r0194.root");
    //AutoTree->Add("root-files/r0195.root");
@@ -93,11 +93,5 @@
    t->ReadPara("NMR_NQR.in");
    t->Loop();
    t->MakeSpec();
-   TCanvas *c1 = new TCanvas("c1","c1",0,0,800,1000);
-   c1->Divide(1,2);
-   c1->cd(1);
-   t->gSpec->Draw("AP");
-   c1->cd(2);
-   t->gTiD3_T->Draw("APL");
-   t->gTiD3_T_cut->Draw("PL");
+   t->PlotSpec();
 }

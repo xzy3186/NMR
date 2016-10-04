@@ -198,6 +198,7 @@ public :
    virtual void     CalibGammaH();
    virtual void     CalibGammaG();
    virtual void     MakeSpec();
+   virtual void     PlotSpec();
    virtual void     FitSpec(int type, double fit_low, double fit_high);
    virtual Long64_t GetTime();
    virtual Long64_t GetTACUpScalar();
@@ -265,9 +266,21 @@ void NMR::InitPara(){
       CtsDown[i]=0;
    }
    freqset.clear();
+   if(gROOT->FindObject("h_GammaH_cal")!=0){
+      gROOT->FindObject("h_GammaH_cal")->Delete();
+   }
    h_GammaH_cal = new TH1F("h_GammaH_cal","h_GammaH_cal",4000,0,4000);
+   if(gROOT->FindObject("h_GammaG_cal")!=0){
+      gROOT->FindObject("h_GammaG_cal")->Delete();
+   }
    h_GammaG_cal = new TH1F("h_GammaG_cal","h_GammaG_cal",4000,0,4000);
+   if(gROOT->FindObject("h_EUp")!=0){
+      gROOT->FindObject("h_EUp")->Delete();
+   }
    h_EUp = new TH1F("h_EUp","h_EUp",1600,0,16000);
+   if(gROOT->FindObject("h_EDown")!=0){
+      gROOT->FindObject("h_EDown")->Delete();
+   }
    h_EDown = new TH1F("h_EDown","h_EDown",1600,0,16000);
    //h_TAC_delta_gH = new TH1F("h_TAC_delta_gH","h_TAC_delta_gH",1600,0,16000);
    //h_TAC_delta_gG = new TH1F("h_TAC_delta_gG","h_TAC_delta_gG",1600,0,16000);
