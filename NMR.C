@@ -10,7 +10,7 @@
 
 #include "lineshape.h"
 
-int NMR::ReadPara(char* filename){
+int NMR::ReadPara(const char* filename){
    InitPara();
    char temp[300];
    FILE *fin = fopen(filename,"r");
@@ -58,7 +58,7 @@ int NMR::ReadPara(char* filename){
    return 1;
 }
 
-int NMR::ReadFitPara(char* filename){
+int NMR::ReadFitPara(const char* filename){
    char temp[300];
    FILE *fin = fopen(filename,"r");
    while(!feof(fin)){
@@ -269,7 +269,7 @@ void NMR::MakeSpec(){
    gTiD3_T_cut->SetLineColor(2);
 }
 
-void SetLatex(TString &content, char* parname, double para, double error, char* unit = ""){
+void SetLatex(TString &content, const char* parname, double para, double error, const char* unit = ""){
    content = parname;
    content += " = ";
    char tpara[200], terror[200]; //truncated value
@@ -350,3 +350,11 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    SetLatex(content0,"Baseline",f1->GetParameter(0)*1000,f1->GetParError(0)*1000,"[x10^{-3}]");
    text0.DrawLatex(posx,0.60,content0);
 }
+
+double gFactorNMR(double LarmorFreq, double MagField){//larmor freq. in the unit of MHz, MagField in the unit of Gauss;
+   const double h_planck = 4.13566766e-12;//in the unit of eV*us
+   const double NuclMageton = 3.152451e-12;
+   double gfn = LarmorFreq * h_planck / MagField / NuclMageton;
+   return gfn;
+}
+
