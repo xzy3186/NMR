@@ -20,18 +20,8 @@
    //AutoTree->Add("root-files/r0099.root");
    //AutoTree->Add("root-files/r0100.root");
    //AutoTree->Add("root-files/r0101.root");
-   //AutoTree->Add("root-files/r0125.root");
-   //AutoTree->Add("root-files/r0127.root");
-   //AutoTree->Add("root-files/r0128.root");
-   //AutoTree->Add("root-files/r0129.root");
-   //AutoTree->Add("root-files/r0130.root");
-   //AutoTree->Add("root-files/r0131.root");
-   //AutoTree->Add("root-files/r0132.root");
-   //AutoTree->Add("root-files/r0133.root");
-   //AutoTree->Add("root-files/r0135.root");
-   //AutoTree->Add("root-files/r0136.root");
-   //AutoTree->Add("root-files/r0137.root");
-   //AutoTree->Add("root-files/r0138.root");
+   //AutoTree->Add("root-files/r0122.root");
+   //AutoTree->Add("root-files/r0124.root");
    //AutoTree->Add("root-files/r0139.root");
    //AutoTree->Add("root-files/r0140.root");
    //AutoTree->Add("root-files/r0141.root");
@@ -42,22 +32,33 @@
    //AutoTree->Add("root-files/r0151.root");
    //AutoTree->Add("root-files/r0152.root");
    //AutoTree->Add("root-files/r0154.root");
-   //AutoTree->Add("root-files/r0157.root");
-   //AutoTree->Add("root-files/r0158.root");
-   //AutoTree->Add("root-files/r0159.root");
-   //AutoTree->Add("root-files/r0160.root");
-   //AutoTree->Add("root-files/r0164.root");
-   //AutoTree->Add("root-files/r0165.root");
-   //AutoTree->Add("root-files/r0166.root");
    //AutoTree->Add("root-files/r0167.root");
-   //AutoTree->Add("root-files/r0169.root");
-   //AutoTree->Add("root-files/r0170.root");
-   //AutoTree->Add("root-files/r0171.root");
-   //AutoTree->Add("root-files/r0172.root");
-   //AutoTree->Add("root-files/r0173.root");
-   //AutoTree->Add("root-files/r0175.root");
-   //AutoTree->Add("root-files/r0176.root");
-   //AutoTree->Add("root-files/r0177.root");
+
+   //34mAl, NMR, Mod = 45 kHz
+   AutoTree->Add("root-files/r0125.root");
+   AutoTree->Add("root-files/r0127.root");
+   AutoTree->Add("root-files/r0128.root");
+   AutoTree->Add("root-files/r0129.root");
+   AutoTree->Add("root-files/r0130.root");
+   AutoTree->Add("root-files/r0131.root");
+   AutoTree->Add("root-files/r0132.root");
+   AutoTree->Add("root-files/r0157.root");
+   AutoTree->Add("root-files/r0158.root");
+   AutoTree->Add("root-files/r0159.root");
+   AutoTree->Add("root-files/r0160.root");
+   AutoTree->Add("root-files/r0164.root");
+   AutoTree->Add("root-files/r0165.root");
+   AutoTree->Add("root-files/r0166.root");
+   AutoTree->Add("root-files/r0169.root");
+   AutoTree->Add("root-files/r0170.root");
+   AutoTree->Add("root-files/r0171.root");
+   AutoTree->Add("root-files/r0172.root");
+   AutoTree->Add("root-files/r0173.root");
+   AutoTree->Add("root-files/r0175.root");
+   AutoTree->Add("root-files/r0176.root");
+   AutoTree->Add("root-files/r0177.root");
+
+   ////34mAl, NMR, Mod = 15 kHz
    //AutoTree->Add("root-files/r0179.root");
    //AutoTree->Add("root-files/r0180.root");
    //AutoTree->Add("root-files/r0181.root");
@@ -68,12 +69,21 @@
    //AutoTree->Add("root-files/r0186.root");
    //AutoTree->Add("root-files/r0187.root");
 
+   ////34mAl, NMR, Mod = 6 kHz
+   ////AutoTree->Add("root-files/r0133.root");
+   //AutoTree->Add("root-files/r0135.root");
+   //AutoTree->Add("root-files/r0136.root");
+   //AutoTree->Add("root-files/r0137.root");
+   //AutoTree->Add("root-files/r0138.root");
+
    /******* NQR Runs ********/
    //AutoTree->Add("root-files/r0103.root");
    //AutoTree->Add("root-files/r0105.root");
    //AutoTree->Add("root-files/r0107.root");
-   AutoTree->Add("root-files/r0155.root");
-   AutoTree->Add("root-files/r0156.root");
+   //AutoTree->Add("root-files/r0155.root");
+   //AutoTree->Add("root-files/r0156.root");
+
+   ////34mAl, NQR, Mod = 60 kHz
    //AutoTree->Add("root-files/r0193.root");
    //AutoTree->Add("root-files/r0194.root");
    //AutoTree->Add("root-files/r0195.root");

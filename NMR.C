@@ -7,6 +7,7 @@
 #include <TLatex.h>
 #include <TText.h>
 #include <TString.h>
+#include <sstream>
 
 #include "lineshape.h"
 
@@ -146,6 +147,7 @@ void NMR::Loop()
          TiD3_previous = TiD3_present;
       }
 
+      //cout<<time_present<<", "<<time_previous<<", "<<TiD3_perSecond<<endl;
       if(time_present - time_previous < TimeCut && TiD3_perSecond > TiD3Cut){ //cut on TiD3 and the time interval between two successive events
          time = time + time_present - time_previous;
          //cout<<jentry<<" "<<time_present<<" "<<time_previous<<endl;
@@ -192,8 +194,8 @@ void NMR::Loop()
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
-      if(freq>1400 && freq<2500){
-         freq = 1900;
+      if(freq>2200 && freq<2900){
+         freq = 2500;
       }
       if(GoUp && GoDown){
          count++;
@@ -272,17 +274,30 @@ void NMR::MakeSpec(){
 void NMR::PlotSpec(){
    TCanvas *c1;
    if(gROOT->FindObject("c1")!=0){
-      gROOT->FindObject("c1")->Clear();
-      gROOT->FindObject("c1")->Delete();
+      c1 = (TCanvas*)gROOT->FindObject("c1");
+   }else{
+      c1 = new TCanvas("c1","c1",0,0,800,1000);
+      c1->Divide(1,2);
    }
-   c1 = new TCanvas("c1","c1",0,0,800,1000);
-   c1->Divide(1,2);
    c1->cd(1);
    gSpec->Draw("AP");
    c1->cd(2);
    gTiD3_T->Draw("APL");
    gTiD3_T_cut->Draw("PL");
 }
+
+void NMR::SaveSpec(){
+   std::ostringstream file_png;
+   string folder = "figure/";
+   string _png = ".png";
+   string Eup = "Eup";
+   string Edown = "Edown";
+   file_png << folder << Eup << EUpMin << Edown << EDownMin << _png;
+   TCanvas *c2 = (TCanvas*)gROOT->FindObject("c2");
+   string sfile_png = file_png.str();
+   c2->SaveAs(sfile_png.c_str());
+}
+
 
 void SetLatex(TString &content, const char* parname, double para, double error, const char* unit = ""){
    content = parname;

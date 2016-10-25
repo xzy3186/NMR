@@ -199,6 +199,7 @@ public :
    virtual void     CalibGammaG();
    virtual void     MakeSpec();
    virtual void     PlotSpec();
+   virtual void     SaveSpec();
    virtual void     FitSpec(int type, double fit_low, double fit_high);
    virtual Long64_t GetTime();
    virtual Long64_t GetTACUpScalar();
