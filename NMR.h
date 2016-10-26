@@ -90,6 +90,7 @@ public :
    std::set<int> freqset;
    std::set<int>::iterator itfreqset;
    vector < pair<Long64_t, int> > TiD3_T, TiD3_T_cut;
+   int IfTiD3;
    TGraphErrors *gSpec;
    TGraph *gTiD3_T, *gTiD3_T_cut;
    TH1F *h_GammaH_cal, *h_GammaG_cal;
@@ -201,6 +202,7 @@ public :
    virtual void     PlotSpec();
    virtual void     SaveSpec();
    virtual void     FitSpec(int type, double fit_low, double fit_high);
+   virtual void     Bootstrapping();
    virtual Long64_t GetTime();
    virtual Long64_t GetTACUpScalar();
    virtual Long64_t GetTACDownScalar();
@@ -253,6 +255,7 @@ Long64_t NMR::LoadTree(Long64_t entry)
 void NMR::InitPara(){
    //initialize all the variables defined by myself
    NumFreq = 0;
+   IfTiD3 = 0;
    E_GammaH_cal = 0;
    E_GammaG_cal = 0;
    time = 0;

@@ -7,7 +7,9 @@
 #include <TLatex.h>
 #include <TText.h>
 #include <TString.h>
+#include <TRandom3.h>
 #include <sstream>
+#include <algorithm>
 
 #include "lineshape.h"
 
@@ -109,9 +111,12 @@ void NMR::Loop()
 // METHOD2: replace line
 //    fChain->GetEntry(jentry);       //read all branches
 //by  b_branchname->GetEntry(ientry); //read only this branch
-   if (fChain == 0) return;
 
-   Long64_t nentries = fChain->GetEntriesFast();
+   if (fChain == 0) return;
+   IfTiD3 = 1;
+
+   Long64_t nentries = fChain->GetEntries();
+   cout<<"total number of events = "<<nentries<<endl;
 
    Long64_t nbytes = 0, nb = 0;
    Long64_t time_previous = 0, time_present = 0, time_next = 0, time_offset = 0;
@@ -194,8 +199,8 @@ void NMR::Loop()
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
-      if(freq>2200 && freq<2900){
-         freq = 2500;
+      if(freq>1400 && freq<2900){
+         freq = 1900;
       }
       if(GoUp && GoDown){
          count++;
@@ -281,9 +286,11 @@ void NMR::PlotSpec(){
    }
    c1->cd(1);
    gSpec->Draw("AP");
-   c1->cd(2);
-   gTiD3_T->Draw("APL");
-   gTiD3_T_cut->Draw("PL");
+   if(IfTiD3 == 1){
+      c1->cd(2);
+      gTiD3_T->Draw("APL");
+      gTiD3_T_cut->Draw("PL");
+   }
 }
 
 void NMR::SaveSpec(){
@@ -313,6 +320,78 @@ void SetLatex(TString &content, const char* parname, double para, double error, 
    content += " ";
    content += unit;
    //cout<<"come here"<<endl;
+}
+
+void NMR::Bootstrapping(){
+
+   if (fChain == 0) return;
+   IfTiD3 = 0;
+
+   Long64_t nentries = fChain->GetEntries();
+   cout<<"total number of events = "<<nentries<<endl;
+
+   Long64_t nbytes = 0, nb = 0;
+   TRandom3 * rand = new TRandom3();
+   rand->SetSeed(0);
+   std::vector<Long64_t> randarray;//array to store random numbers
+   std::vector<Long64_t>::iterator itrandarray; //the iterator of the array
+
+   Long64_t nevents = nentries/5;
+   for(Long64_t jjentry = 0; jjentry<nevents; jjentry++){
+      Long64_t jentry = rand->Integer(nentries);
+      randarray.push_back(jentry);
+   }
+   std::sort(randarray.begin(), randarray.end() );
+
+   Long64_t index = 0;
+   for(itrandarray=randarray.begin(); itrandarray!=randarray.end(); itrandarray++){
+      if(index%100000==0){
+         cout<<index<<" events picked up..."<<endl;
+      }
+      Long64_t jentry = (Long64_t)*itrandarray;
+      Long64_t ientry = LoadTree(jentry);
+      if (ientry < 0) break;
+      nb = fChain->GetEntry(jentry);   nbytes += nb;
+
+      if(FLAG==100){
+         continue;
+      }
+
+      int freq;
+      if(NMRorNQR==0){//NMR data
+         freq = FREQ;
+      }else if(NMRorNQR==1){//NRQ data
+         if(RF_OFF_ON==1000){
+            freq = FREQ2;
+         }else{
+            freq = FREQ;
+         }
+      }else{
+         break;
+      }
+
+      // if (Cut(ientry) < 0) continue;
+      bool GoUp = false, GoDown = false;
+      if(TAC_Up>TACUpMin && TAC_Up<TACUpMax && E_Up>EUpMin && E_Up<EUpMax && E_deltaUp>EDeltaUpMin && E_deltaUp<EDeltaUpMax){
+         GoUp = true;
+      }
+      if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
+         GoDown = true;
+      }
+      //just for test, to sum RF-OFF freq at different position.
+      if(freq>1400 && freq<2900){
+         freq = 1900;
+      }
+
+      if(GoUp){
+         CtsUp[freq]++;
+      }
+      if(GoDown){
+         CtsDown[freq]++;
+      }
+      freqset.insert(freq);
+      index++;
+   }
 }
 
 void NMR::FitSpec(int type, double fit_low, double fit_high){
