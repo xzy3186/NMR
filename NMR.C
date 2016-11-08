@@ -122,6 +122,11 @@ void NMR::Loop()
    Long64_t time_previous = 0, time_present = 0, time_next = 0, time_offset = 0;
    int TiD3_present = 0, TiD3_previous = 0, TiD3_perSecond = 0;
    int count = 0;
+
+   FieldAvg = 0;
+   double field_each_event;
+   Long64_t ntotal = 0;
+
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
@@ -152,11 +157,13 @@ void NMR::Loop()
          TiD3_previous = TiD3_present;
       }
 
-      //cout<<time_present<<", "<<time_previous<<", "<<TiD3_perSecond<<endl;
       if(time_present - time_previous < TimeCut && TiD3_perSecond > TiD3Cut){ //cut on TiD3 and the time interval between two successive events
          time = time + time_present - time_previous;
          //cout<<jentry<<" "<<time_present<<" "<<time_previous<<endl;
       }else{
+         //if(TiD3_perSecond>500){
+         //   cout<<time_present<<", "<<time_previous<<", "<<TiD3_perSecond<<endl;
+         //}
          time_previous = time_present;
          continue;
       }
@@ -167,9 +174,13 @@ void NMR::Loop()
       //if(time<6000){
       //   continue;
       //}
-      if(FLAG==100){
+      if(FLAG==100 || FIELD==0){
          continue;
       }
+
+      field_each_event = FIELD + FIELD2/10.0;
+      FieldAvg = FieldAvg + field_each_event;
+      ntotal++;
 
       CalibGammaH();
       CalibGammaG();
@@ -199,8 +210,8 @@ void NMR::Loop()
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
-      if(freq>1400 && freq<2900){
-         freq = 1900;
+      if(freq>2260 && freq<2900){
+         freq = 2500;
       }
       if(GoUp && GoDown){
          count++;
@@ -219,6 +230,7 @@ void NMR::Loop()
       h_EDown->Fill(E_Down);
       freqset.insert(freq);
    }
+   FieldAvg = FieldAvg/ntotal;
    cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
 }
 
@@ -226,6 +238,7 @@ void NMR::MakeSpec(){
    NumFreq = 0;
 
    cout<< freqset.size() <<" frequencies found:"<< endl;
+   cout<<"id, Freq, CtsUp, CtsDown, Asymm, AsymmError"<<endl;
    for(itfreqset=freqset.begin(); itfreqset!=freqset.end(); itfreqset++){
       int ffreq = *itfreqset;
       int fup = CtsUp[ffreq], fdown = CtsDown[ffreq];
@@ -234,8 +247,8 @@ void NMR::MakeSpec(){
       //gFreqErr[NumFreq] = Mod;
       gFreqErr[NumFreq] = 0;
       gAsymmErr[NumFreq] = sqrt(4.0*fup*fdown/pow(fup+fdown,3));
+      cout<<NumFreq<<", "<<ffreq<<", "<<fup<<", "<<fdown<<", "<<gAsymm[NumFreq]<<", "<<gAsymmErr[NumFreq]<<endl;
       NumFreq++;
-      cout<<NumFreq<<" "<<ffreq<<" "<<fup<<" "<<fdown<<endl;
    }
    cout<<"Total Data taking time: "<<time/1000./60<<" min."<<endl;
    gSpec = new TGraphErrors(NumFreq,gFreq,gAsymm,gFreqErr,gAsymmErr);
@@ -336,7 +349,7 @@ void NMR::Bootstrapping(){
    std::vector<Long64_t> randarray;//array to store random numbers
    std::vector<Long64_t>::iterator itrandarray; //the iterator of the array
 
-   Long64_t nevents = nentries/5;
+   Long64_t nevents = nentries;
    for(Long64_t jjentry = 0; jjentry<nevents; jjentry++){
       Long64_t jentry = rand->Integer(nentries);
       randarray.push_back(jentry);
@@ -345,7 +358,7 @@ void NMR::Bootstrapping(){
 
    Long64_t index = 0;
    for(itrandarray=randarray.begin(); itrandarray!=randarray.end(); itrandarray++){
-      if(index%100000==0){
+      if(index%500000==0){
          cout<<index<<" events picked up..."<<endl;
       }
       Long64_t jentry = (Long64_t)*itrandarray;
@@ -353,7 +366,8 @@ void NMR::Bootstrapping(){
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-      if(FLAG==100){
+      if(FLAG==100 || FIELD ==0){
+         index++;
          continue;
       }
 
@@ -379,8 +393,8 @@ void NMR::Bootstrapping(){
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
-      if(freq>1400 && freq<2900){
-         freq = 1900;
+      if(freq>2260 && freq<2900){
+         freq = 2500;
       }
 
       if(GoUp){

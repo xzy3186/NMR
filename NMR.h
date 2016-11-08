@@ -82,6 +82,7 @@ public :
    UShort_t        SR_TiD3;
 
    //some variables for near-line analysis
+   double FieldAvg;
    double E_GammaH_cal, E_GammaG_cal;
    int NumFreq;
    double gFreq[30], gAsymm[30], gFreqErr[30], gAsymmErr[30];
@@ -98,10 +99,10 @@ public :
    //TH1F *h_TAC_delta_gH, *h_TAC_delta_gG;
 
    //calibration parameters of gamma
-   double a1_GammaH_L;  //slope for April 2016 
-   double a2_GammaH_L;  //slope for April 2016 
-   double a1_GammaG_L;  //slope for April 2016 
-   double a2_GammaG_L;  //slope for April 2016 
+   double a1_GammaH_L;  //slope for April 2016
+   double a2_GammaH_L;  //slope for April 2016
+   double a1_GammaG_L;  //slope for April 2016
+   double a2_GammaG_L;  //slope for April 2016
 
    double b1_GammaH_L;  //offset for April 2016
    double b2_GammaH_L;  //offset for April 2016
@@ -204,6 +205,7 @@ public :
    virtual void     FitSpec(int type, double fit_low, double fit_high);
    virtual void     Bootstrapping();
    virtual Long64_t GetTime();
+   virtual double   GetField();
    virtual Long64_t GetTACUpScalar();
    virtual Long64_t GetTACDownScalar();
    virtual Long64_t GetTiD3();
@@ -254,6 +256,7 @@ Long64_t NMR::LoadTree(Long64_t entry)
 
 void NMR::InitPara(){
    //initialize all the variables defined by myself
+   FieldAvg = 0;
    NumFreq = 0;
    IfTiD3 = 0;
    E_GammaH_cal = 0;
@@ -442,6 +445,10 @@ Int_t NMR::Cut()
 
 Long64_t NMR::GetTime(){
    return SR_Clock_UP*pow(2,16)+SR_Clock;
+}
+
+double NMR::GetField(){
+   return FieldAvg;
 }
 
 Long64_t NMR::GetTACUpScalar(){
