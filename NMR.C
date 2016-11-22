@@ -123,7 +123,7 @@ void NMR::Loop()
    int TiD3_present = 0, TiD3_previous = 0, TiD3_perSecond = 0;
    int count = 0;
 
-   FieldAvg = 0;
+   FieldAvgHP = 0;
    double field_each_event;
    Long64_t ntotal = 0;
 
@@ -179,7 +179,7 @@ void NMR::Loop()
       }
 
       field_each_event = FIELD + FIELD2/10.0;
-      FieldAvg = FieldAvg + field_each_event;
+      FieldAvgHP = FieldAvgHP + field_each_event;
       ntotal++;
 
       CalibGammaH();
@@ -209,10 +209,10 @@ void NMR::Loop()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      //just for test, to sum RF-OFF freq at different position.
-      if(freq>2260 && freq<2900){
-         freq = 2500;
-      }
+      ////just for test, to sum RF-OFF freq at different position.
+      //if(freq>2260 && freq<2900){
+      //   freq = 2500;
+      //}
       if(GoUp && GoDown){
          count++;
          continue;
@@ -230,7 +230,8 @@ void NMR::Loop()
       h_EDown->Fill(E_Down);
       freqset.insert(freq);
    }
-   FieldAvg = FieldAvg/ntotal;
+   FieldAvgHP = FieldAvgHP/ntotal;
+   FieldAvgCenter = (FieldAvgHP + 0.199909687)/0.9934737666;
    cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
 }
 
@@ -392,10 +393,10 @@ void NMR::Bootstrapping(){
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      //just for test, to sum RF-OFF freq at different position.
-      if(freq>2260 && freq<2900){
-         freq = 2500;
-      }
+      ////just for test, to sum RF-OFF freq at different position.
+      //if(freq>2260 && freq<2900){
+      //   freq = 2500;
+      //}
 
       if(GoUp){
          CtsUp[freq]++;
