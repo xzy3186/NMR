@@ -174,7 +174,7 @@ void NMR::Loop()
       //if(time<6000){
       //   continue;
       //}
-      if(FLAG==100 || FIELD==0){
+      if(FLAG==100 /*|| FIELD==0*/){
          continue;
       }
 
@@ -209,8 +209,11 @@ void NMR::Loop()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      ////just for test, to sum RF-OFF freq at different position.
-      //if(freq>2260 && freq<2900){
+      //just for test, to sum RF-OFF freq at different position.
+      if(NMRorNQR==1 && freq>1500){
+         freq = 1500;
+      }
+      //if(NMRorNQR==0 && freq>2200 && freq<2800){
       //   freq = 2500;
       //}
       if(GoUp && GoDown){
@@ -486,6 +489,10 @@ void A_Divided_by_B(double A, double Aerr, double B, double Berr){
    double C = A/B;
    double Cerr = sqrt(Aerr*Aerr/A/A+Berr*Berr/B/B)*C;
    cout<<"C = "<<C<<", error = "<<Cerr<<endl;
+}
+
+void QuadNQR(double nuQ, double nuQerror){
+   A_Divided_by_B(nuQ,nuQerror,16.39,0.11);
 }
 
 void A_Times_B(double A, double Aerr, double B, double Berr){
