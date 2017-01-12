@@ -234,7 +234,9 @@ void NMR::Loop()
       freqset.insert(freq);
    }
    FieldAvgHP = FieldAvgHP/ntotal;
-   FieldAvgCenter = (FieldAvgHP + 0.199909687)/0.9934737666;
+   FieldAvgCenterBefore = CalFieldCenterBefore(FieldAvgHP);
+   FieldAvgCenterAfter = CalFieldCenterAfter(FieldAvgHP);
+   FieldAvgCenter = CalFieldCenter(FieldAvgHP);
    cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
 }
 

@@ -82,7 +82,10 @@ public :
    UShort_t        SR_TiD3;
 
    //some variables for near-line analysis
-   double FieldAvgHP, FieldAvgCenter;
+   double FieldAvgHP;
+   double FieldAvgCenterBefore; //magnetic field at the center position, calibrated before the run
+   double FieldAvgCenterAfter; //magnetic field at the center position, calibrated after the run
+   double FieldAvgCenter; //magnetic field at the center position, average of the previous two
    double E_GammaH_cal, E_GammaG_cal;
    int NumFreq;
    double gFreq[30], gAsymm[30], gFreqErr[30], gAsymmErr[30];
@@ -206,7 +209,12 @@ public :
    virtual void     Bootstrapping();
    virtual Long64_t GetTime();
    virtual double   GetFieldHP();
+   virtual double   GetFieldCenterBefore();
+   virtual double   GetFieldCenterAfter();
    virtual double   GetFieldCenter();
+   virtual double   CalFieldCenterBefore(double FieldHP);
+   virtual double   CalFieldCenterAfter(double FieldHP);
+   virtual double   CalFieldCenter(double FieldHP);
    virtual Long64_t GetTACUpScalar();
    virtual Long64_t GetTACDownScalar();
    virtual Long64_t GetTiD3();
@@ -258,6 +266,8 @@ Long64_t NMR::LoadTree(Long64_t entry)
 void NMR::InitPara(){
    //initialize all the variables defined by myself
    FieldAvgHP = 0;
+   FieldAvgCenterBefore = 0;
+   FieldAvgCenterAfter = 0;
    FieldAvgCenter = 0;
    NumFreq = 0;
    IfTiD3 = 0;
@@ -453,8 +463,31 @@ double NMR::GetFieldHP(){
    return FieldAvgHP;
 }
 
+double NMR::GetFieldCenterBefore(){
+   return FieldAvgCenterBefore;
+}
+
+double NMR::GetFieldCenterAfter(){
+   return FieldAvgCenterAfter;
+}
+
 double NMR::GetFieldCenter(){
    return FieldAvgCenter;
+}
+
+double NMR::CalFieldCenterBefore(double FieldHP){
+   double FieldCenter = (FieldHP + 0.971479535)/0.9931743532;
+   return FieldCenter;
+}
+
+double NMR::CalFieldCenterAfter(double FieldHP){
+   double FieldCenter = (FieldHP - 0.526407778)/0.9929154674;
+   return FieldCenter;
+}
+
+double NMR::CalFieldCenter(double FieldHP){
+   double FieldCenter = (CalFieldCenterBefore(FieldHP)+CalFieldCenterAfter(FieldHP))/2.0;
+   return FieldCenter;
 }
 
 Long64_t NMR::GetTACUpScalar(){
