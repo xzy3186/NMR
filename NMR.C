@@ -480,10 +480,14 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    text0.DrawLatex(posx,0.60,content0);
 }
 
-double gFactorNMR(double LarmorFreq, double MagField){//larmor freq. in the unit of MHz, MagField in the unit of Gauss;
-   const double h_planck = 4.13566766e-12;//in the unit of eV*us
-   const double NuclMageton = 3.152451e-12;
+double gFactorNMR(double LarmorFreq, double LarmorFreqErr, double MagField, double MagFieldErr){//larmor freq. in the unit of kHz, MagField in the unit of Gauss;
+   const double h_planck = 4.13566766e-12;//in the unit of eV*ms
+   const double NuclMageton = 3.152451e-12;//in the unit of eV/gauss
    double gfn = LarmorFreq * h_planck / MagField / NuclMageton;
+   double f1 = LarmorFreqErr/LarmorFreq;
+   double f2 = MagFieldErr/MagField;
+   double gfnerr = sqrt(f1*f1+f2*f2)*gfn;
+   cout << "Error = "<<gfnerr<<endl;
    return gfn;
 }
 
