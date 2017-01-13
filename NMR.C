@@ -156,6 +156,10 @@ void NMR::Loop()
          time_next = time_present + 1000;
          TiD3_previous = TiD3_present;
       }
+      if(FLAG==100 || FIELD==0){
+         time_previous = time_present;
+         continue;
+      }
 
       if(time_present - time_previous < TimeCut && TiD3_perSecond > TiD3Cut){ //cut on TiD3 and the time interval between two successive events
          time = time + time_present - time_previous;
@@ -174,13 +178,10 @@ void NMR::Loop()
       //if(time<6000){
       //   continue;
       //}
-      if(FLAG==100 /*|| FIELD==0*/){
-         continue;
-      }
 
       field_each_event = FIELD + FIELD2/10.0;
-      FieldAvgHP = FieldAvgHP + field_each_event;
       ntotal++;
+      FieldAvgHP = FieldAvgHP + field_each_event;
 
       CalibGammaH();
       CalibGammaG();
@@ -372,7 +373,7 @@ void NMR::Bootstrapping(){
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-      if(FLAG==100 || FIELD ==0){
+      if(FLAG==100 || FIELD==0){
          index++;
          continue;
       }
@@ -483,7 +484,7 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
 double gFactorNMR(double LarmorFreq, double LarmorFreqErr, double MagField, double MagFieldErr){//larmor freq. in the unit of kHz, MagField in the unit of Gauss;
    const double h_planck = 4.13566766e-12;//in the unit of eV*ms
    const double NuclMageton = 3.152451e-12;//in the unit of eV/gauss
-   double gfn = LarmorFreq * h_planck / MagField / NuclMageton;
+   double gfn = LarmorFreq / MagField * h_planck / NuclMageton;
    double f1 = LarmorFreqErr/LarmorFreq;
    double f2 = MagFieldErr/MagField;
    double gfnerr = sqrt(f1*f1+f2*f2)*gfn;
