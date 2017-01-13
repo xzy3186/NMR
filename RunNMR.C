@@ -2,30 +2,58 @@
    gROOT->ProcessLine(".L NMR.C+");
    TChain *AutoTree = new TChain ("AutoTree");
    /******* NMR Runs ********/
-   //AutoTree->Add("root-files/r0081.root");
-   //AutoTree->Add("root-files/r0082.root");
-   //AutoTree->Add("root-files/r0083.root");
-   //AutoTree->Add("root-files/r0084.root");
-   //AutoTree->Add("root-files/r0085.root");
+   ////32Al, NMR, Mod = 3 kHz
+   //AutoTree->Add("root-files/r0092.root");
+   //AutoTree->Add("root-files/r0093.root");
+   //AutoTree->Add("root-files/r0095.root");
+
+   ////32Al, NMR, Mod = 3 kHz, different steps
+   //AutoTree->Add("root-files/r0096.root");
+
+   ////32Al, NMR, Mod = 6 kHz
    //AutoTree->Add("root-files/r0087.root");
    //AutoTree->Add("root-files/r0088.root");
    //AutoTree->Add("root-files/r0089.root");
    //AutoTree->Add("root-files/r0090.root");
    //AutoTree->Add("root-files/r0091.root");
-   //AutoTree->Add("root-files/r0093.root");
-   //AutoTree->Add("root-files/r0092.root");
-   //AutoTree->Add("root-files/r0095.root");
-   //AutoTree->Add("root-files/r0096.root");
+
+   ////32Al, NMR, Mod = 8 kHz
+   //AutoTree->Add("root-files/r0081.root");
+   //AutoTree->Add("root-files/r0082.root");
+   //AutoTree->Add("root-files/r0083.root");
+   //AutoTree->Add("root-files/r0084.root");
+   //AutoTree->Add("root-files/r0085.root");
+
+   ////32Al, NMR, Mod = 8 kHz, different steps
+   //AutoTree->Add("root-files/r0150.root");
+
+   ////32Al, NMR, Mod = 8 kHz, different steps
+   //AutoTree->Add("root-files/r0151.root");
+
+   ////32Al, NMR, Mod = 8 kHz, different steps
+   //AutoTree->Add("root-files/r0152.root");
+
+   ////32Al, NMR, Mod = 15 kHz
+   //AutoTree->Add("root-files/r0154.root");
+
+   ////32Al, NMR, Mod = 45 kHz
    //AutoTree->Add("root-files/r0097.root");
    //AutoTree->Add("root-files/r0099.root");
+
+   ////32Al, NMR, Mod = 45 kHz, different steps
    //AutoTree->Add("root-files/r0100.root");
    //AutoTree->Add("root-files/r0101.root");
-   //AutoTree->Add("root-files/r0140.root");
-   //AutoTree->Add("root-files/r0141.root");
+
+   ////34gAl, NMR, Mod = 10 kHz
    //AutoTree->Add("root-files/r0145.root");
+
+   ////34gAl, NMR, Mod = 10 kHz, different steps
    //AutoTree->Add("root-files/r0146.root");
-   //AutoTree->Add("root-files/r0150.root");
-   //AutoTree->Add("root-files/r0151.root");
+   //AutoTree->Add("root-files/r0147.root");
+
+   ////34gAl, NMR, Mod = 45 kHz, different steps
+   //AutoTree->Add("root-files/r0148.root");
+   //AutoTree->Add("root-files/r0149.root");
    //AutoTree->Add("root-files/r0152.root");
    //AutoTree->Add("root-files/r0154.root");
    //AutoTree->Add("root-files/r0167.root");
@@ -84,29 +112,36 @@
    //AutoTree->Add("root-files/r0138.root");
 
    /******* NQR Runs ********/
+   ////32Al, NQR, Mod = 60 kHz
    //AutoTree->Add("root-files/r0102.root");
-   //AutoTree->Add("root-files/r0103.root");
-   //AutoTree->Add("root-files/r0105.root");
-   //AutoTree->Add("root-files/r0107.root");
-   //AutoTree->Add("root-files/r0108.root");
+
+   ////32Al, NQR, Mod = 60 kHz, different steps
    //AutoTree->Add("root-files/r0155.root");
    //AutoTree->Add("root-files/r0156.root");
 
-   //34mAl, NQR, Mod = 60 kHz
-   AutoTree->Add("root-files/r0193.root");
-   AutoTree->Add("root-files/r0194.root");
-   AutoTree->Add("root-files/r0195.root");
-   AutoTree->Add("root-files/r0197.root");
-   //AutoTree->Add("root-files/r0199.root");
-   AutoTree->Add("root-files/r0200.root");
-   AutoTree->Add("root-files/r0203.root");
-   AutoTree->Add("root-files/r0204.root");
-   AutoTree->Add("root-files/r0205.root");
-   AutoTree->Add("root-files/r0206.root");
-   AutoTree->Add("root-files/r0207.root");
-   AutoTree->Add("root-files/r0208.root");
-   AutoTree->Add("root-files/r0209.root");
-   AutoTree->Add("root-files/r0210.root");
+   ////32Al, NQR, Mod = 40 kHz
+   //AutoTree->Add("root-files/r0103.root");
+   //AutoTree->Add("root-files/r0105.root");
+   //AutoTree->Add("root-files/r0107.root");
+
+   //32Al, NQR, Mod = 40 kHz, different Larmor frequency, no FIELD information
+   //AutoTree->Add("root-files/r0108.root");
+
+   ////34mAl, NQR, Mod = 60 kHz
+   //AutoTree->Add("root-files/r0193.root");
+   //AutoTree->Add("root-files/r0194.root");
+   //AutoTree->Add("root-files/r0195.root");
+   //AutoTree->Add("root-files/r0197.root");
+   ////AutoTree->Add("root-files/r0199.root");
+   //AutoTree->Add("root-files/r0200.root");
+   //AutoTree->Add("root-files/r0203.root");
+   //AutoTree->Add("root-files/r0204.root");
+   //AutoTree->Add("root-files/r0205.root");
+   //AutoTree->Add("root-files/r0206.root");
+   //AutoTree->Add("root-files/r0207.root");
+   //AutoTree->Add("root-files/r0208.root");
+   //AutoTree->Add("root-files/r0209.root");
+   //AutoTree->Add("root-files/r0210.root");
 
    ////34mAl, NQR, Mod = 60 kHz, different Larmor frequency
    //AutoTree->Add("root-files/r0162.root");
