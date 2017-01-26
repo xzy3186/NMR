@@ -51,12 +51,9 @@
    //AutoTree->Add("root-files/r0146.root");
    //AutoTree->Add("root-files/r0147.root");
 
-   ////34gAl, NMR, Mod = 45 kHz, different steps
+   ////34gAl, NMR, Mod = 45 kHz
    //AutoTree->Add("root-files/r0148.root");
    //AutoTree->Add("root-files/r0149.root");
-   //AutoTree->Add("root-files/r0152.root");
-   //AutoTree->Add("root-files/r0154.root");
-   //AutoTree->Add("root-files/r0167.root");
 
    ////34mAl, NMR, Mod = 45 kHz
    //AutoTree->Add("root-files/r0125.root");
@@ -64,6 +61,8 @@
    //AutoTree->Add("root-files/r0128.root");
    //AutoTree->Add("root-files/r0129.root");
    //AutoTree->Add("root-files/r0130.root");
+
+   ////34Al, NMR, Mod = 45 kHz, different RF power
    //AutoTree->Add("root-files/r0131.root");
    //AutoTree->Add("root-files/r0132.root");
 
@@ -112,8 +111,8 @@
    //AutoTree->Add("root-files/r0138.root");
 
    /******* NQR Runs ********/
-   ////32Al, NQR, Mod = 60 kHz
-   //AutoTree->Add("root-files/r0102.root");
+   //32Al, NQR, Mod = 60 kHz
+   AutoTree->Add("root-files/r0102.root");
 
    ////32Al, NQR, Mod = 60 kHz, different steps
    //AutoTree->Add("root-files/r0155.root");

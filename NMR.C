@@ -498,7 +498,7 @@ void A_Divided_by_B(double A, double Aerr, double B, double Berr){
    cout<<"C = "<<C<<", error = "<<Cerr<<endl;
 }
 
-void QuadNQR(double nuQ, double nuQerror){
+void QuadNQR(double nuQ, double nuQerror){//nuQ in kHz, Q in mb
    A_Divided_by_B(nuQ,nuQerror,16.39,0.11);
 }
 
@@ -507,3 +507,100 @@ void A_Times_B(double A, double Aerr, double B, double Berr){
    double Cerr = sqrt(Aerr*Aerr/A/A+Berr*Berr/B/B)*C;
    cout<<"C = "<<C<<", error = "<<Cerr<<endl;
 }
+
+int ReadDataPoint(const char* filename, int* IntArray, float* NumArray, float* ErrorArray){
+   int index;
+   float num, error;
+   FILE *fin = fopen(filename,"r");
+   int i = 0;
+   while(!feof(fin)){
+      fscanf(fin,"%d %f %f",&index,&num,&error);
+      IntArray[i] = index;
+      NumArray[i] = num;
+      ErrorArray[i] = error;
+      i++;
+   }
+   return i;
+}
+
+void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value, type=1: weighted mean value
+   const int dim = 100;
+   int IndexArray[dim];
+   float NumArray[dim], ErrorArray[dim];
+   int RealDim = ReadDataPoint(filename, IndexArray, NumArray, ErrorArray);
+   TGraphErrors* gData = new TGraphErrors(RealDim);
+   float Mean = 0, MeanError = 0, MeanDev = 0;
+   float SumSigma = 0;
+   for(int i=0; i<RealDim; i++){
+      gData->SetPoint(i, IndexArray[i], NumArray[i]);
+      gData->SetPointError(i, 0, ErrorArray[i]);
+   }
+
+   if(type == 0){
+      for(int i=0; i<RealDim; i++){
+         Mean = Mean + NumArray[i]/RealDim;
+         MeanError = MeanError + ErrorArray[i]/RealDim;
+      }
+      for(int i=0; i<RealDim; i++){
+         MeanDev = MeanDev + pow((NumArray[i]-Mean),2)/(RealDim-1);
+      }
+      MeanDev = sqrt(MeanDev);
+   }else if(type == 1){
+      MeanError = 100;
+      for(int i=0; i<RealDim; i++){
+         Mean = Mean + NumArray[i]/pow(ErrorArray[i],2);
+         SumSigma = SumSigma + 1/pow(ErrorArray[i],2);
+         if(ErrorArray[i]<MeanError){
+            MeanError = ErrorArray[i];
+         }
+      }
+      Mean = Mean/SumSigma;
+      MeanError = sqrt(1/SumSigma);
+      MeanDev = 0;
+   }
+   float TotalError = sqrt(MeanError*MeanError + MeanDev*MeanDev);
+   cout<<"Mean = "<<Mean<<", MeanDev = "<<MeanDev<<", TotalError = "<<TotalError<<endl;
+
+   TGraph* gMean = new TGraph(2);
+   TGraph* gDev = new TGraph(4);
+   TGraph* gError = new TGraph(4);
+
+   float offset = 0.5*fabs(IndexArray[0]-IndexArray[1]);
+   gMean->SetPoint(0, IndexArray[0]-offset, Mean);
+   gMean->SetPoint(1, IndexArray[RealDim-1]+offset, Mean);
+   gMean->SetLineWidth(3);
+
+   gDev->SetPoint(0, IndexArray[0]-offset, Mean+MeanDev);
+   gDev->SetPoint(1, IndexArray[RealDim-1]+offset, Mean+MeanDev);
+   gDev->SetPoint(2, IndexArray[RealDim-1]+offset, Mean-MeanDev);
+   gDev->SetPoint(3, IndexArray[0]-offset, Mean-MeanDev);
+   gDev->SetFillStyle(1001);
+   gDev->SetFillColor(12);
+
+   gError->SetPoint(0, IndexArray[0]-offset, Mean+TotalError);
+   gError->SetPoint(1, IndexArray[RealDim-1]+offset, Mean+TotalError);
+   gError->SetPoint(2, IndexArray[RealDim-1]+offset, Mean-TotalError);
+   gError->SetPoint(3, IndexArray[0]-offset, Mean-TotalError);
+   gError->SetFillStyle(1001);
+   gError->SetFillColor(16);
+
+   gData->SetTitle("Centroid vs. Energy cut");
+   gData->GetYaxis()->SetNdivisions(508);
+   gData->GetYaxis()->SetTitle("Centroid (kHz)");
+   gData->GetYaxis()->CenterTitle(true);
+   gData->GetYaxis()->SetTitleOffset(1.2);
+   gData->GetXaxis()->SetTickLength(-0.03);
+   gData->GetXaxis()->SetLabelOffset(0.02);
+   gData->GetXaxis()->SetTitleOffset(1.2);
+   gData->GetXaxis()->SetNdivisions(508);
+   gData->GetXaxis()->SetTitle("Energy cut (a.u.)");
+   gData->GetXaxis()->CenterTitle(true);
+   gData->SetMarkerStyle(21);
+   gData->SetMarkerSize(1.3);
+   gData->Draw("AP");
+   gError->Draw("f");
+   gDev->Draw("f");
+   gMean->Draw("L");
+   gData->Draw("P");
+}
+
