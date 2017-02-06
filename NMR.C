@@ -8,6 +8,7 @@
 #include <TText.h>
 #include <TString.h>
 #include <TRandom3.h>
+#include <TLegend.h>
 #include <sstream>
 #include <algorithm>
 
@@ -356,7 +357,7 @@ void NMR::Bootstrapping(){
    std::vector<Long64_t> randarray;//array to store random numbers
    std::vector<Long64_t>::iterator itrandarray; //the iterator of the array
 
-   Long64_t nevents = nentries;
+   Long64_t nevents = nentries;//number of random sample is the same as the number of real events
    for(Long64_t jjentry = 0; jjentry<nevents; jjentry++){
       Long64_t jentry = rand->Integer(nentries);
       randarray.push_back(jentry);
@@ -399,7 +400,7 @@ void NMR::Bootstrapping(){
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      ////just for test, to sum RF-OFF freq at different position.
+      //just for test, to sum RF-OFF freq at different position.
       //if(freq>2260 && freq<2900){
       //   freq = 2500;
       //}
@@ -415,6 +416,83 @@ void NMR::Bootstrapping(){
    }
 }
 
+void NMR::FitSpecCompare(double fit_low, double fit_high){
+   ReadFitPara("NMR_NQR_fit.in");
+   TF1 *f1, *f2, *f3, *f4, *f5;
+
+   f1 = new TF1("f1",LineShapeMarieke,fit_low,fit_high,5);
+   f2 = new TF1("f2",LineShapeRamp,fit_low,fit_high,5);
+   f3 = new TF1("f3",LineShapeSine,fit_low,fit_high,5);
+   f4 = new TF1("f4",LineShapeLorentz,fit_low,fit_high,5);
+   f5 = new TF1("f5",LineShapeGaussian,fit_low,fit_high,5);
+
+   f1->SetParameter(0,BaseL); f1->SetParLimits(0,BaseL_low,BaseL_high);
+   f1->SetParameter(1,Amp); f1->SetParLimits(1,Amp_low,Amp_high);
+   f1->SetParameter(2,Centroid); f1->SetParLimits(2,Centroid_low,Centroid_high);
+   f1->SetParameter(3,Mod); f1->SetParLimits(3,Mod_low,Mod_high);
+   f1->SetParameter(4,Width); f1->SetParLimits(4,Width_low,Width_high);
+   f1->SetLineColor(1);
+
+   f2->SetParameter(0,BaseL); f2->SetParLimits(0,BaseL_low,BaseL_high);
+   f2->SetParameter(1,Amp); f2->SetParLimits(1,Amp_low,Amp_high);
+   f2->SetParameter(2,Centroid); f2->SetParLimits(2,Centroid_low,Centroid_high);
+   f2->SetParameter(3,Mod); f2->SetParLimits(3,Mod_low,Mod_high);
+   f2->SetParameter(4,Width); f2->SetParLimits(4,Width_low,Width_high);
+   f2->SetLineColor(2);
+
+   f3->SetParameter(0,BaseL); f3->SetParLimits(0,BaseL_low,BaseL_high);
+   f3->SetParameter(1,Amp); f3->SetParLimits(1,Amp_low,Amp_high);
+   f3->SetParameter(2,Centroid); f3->SetParLimits(2,Centroid_low,Centroid_high);
+   f3->SetParameter(3,Mod); f3->SetParLimits(3,Mod_low,Mod_high);
+   f3->SetParameter(4,Width); f3->SetParLimits(4,Width_low,Width_high);
+   f3->SetLineColor(4);
+
+   f4->SetParameter(0,BaseL); f4->SetParLimits(0,BaseL_low,BaseL_high);
+   f4->SetParameter(1,Amp); f4->SetParLimits(1,Amp_low,Amp_high);
+   f4->SetParameter(2,Centroid); f4->SetParLimits(2,Centroid_low,Centroid_high);
+   f4->FixParameter(3,0);
+   f4->SetParameter(4,Width); f4->SetParLimits(4,Width_low,Width_high);
+   f4->SetLineColor(6);
+
+   f5->SetParameter(0,BaseL); f5->SetParLimits(0,BaseL_low,BaseL_high);
+   f5->SetParameter(1,Amp); f5->SetParLimits(1,Amp_low,Amp_high);
+   f5->SetParameter(2,Centroid); f5->SetParLimits(2,Centroid_low,Centroid_high);
+   f5->FixParameter(3,0);
+   f5->SetParameter(4,Width); f5->SetParLimits(4,Width_low,Width_high);
+   f5->SetLineColor(7);
+
+   gSpec->Fit("f1","EMR0","D");
+   gSpec->Fit("f2","EMR0","D");
+   gSpec->Fit("f3","EMR0","D");
+   gSpec->Fit("f4","EMR0","D");
+   gSpec->Fit("f5","EMR0","D");
+
+   TCanvas *c2;
+   if(gROOT->FindObject("c2")!=0){
+      c2 = (TCanvas*) gROOT->FindObject("c2");
+   }else{
+      c2 = new TCanvas("c2","c2",0,0,800,500);
+   }
+   c2->cd();
+   gSpec->Draw("AP");
+   f1->Draw("same");
+   f2->Draw("same");
+   f3->Draw("same");
+   f4->Draw("same");
+   f5->Draw("same");
+
+   TLegend *lg = new TLegend(0.55,0.55,0.9,0.9,"");
+   lg->SetBorderSize(0);
+   lg->SetFillColor(0);
+   lg->SetFillStyle(0);
+   lg->AddEntry(f1,"Lineshape A","L");
+   lg->AddEntry(f2,"Lineshape B","L");
+   lg->AddEntry(f3,"Lineshape C","L");
+   lg->AddEntry(f4,"Lineshape D","L");
+   lg->AddEntry(f5,"Lineshape E","L");
+   lg->Draw();
+}
+
 void NMR::FitSpec(int type, double fit_low, double fit_high){
    ReadFitPara("NMR_NQR_fit.in");
    TF1 *f1;
@@ -422,9 +500,14 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
       f1 = new TF1("f1",LineShapeMarieke,fit_low,fit_high,5);
    }else if(type == 1){
       f1 = new TF1("f1",LineShapeRamp,fit_low,fit_high,5);
-   }else{
+   }else if(type == 2){
       f1 = new TF1("f1",LineShapeSine,fit_low,fit_high,5);
+   }else if(type == 3){
+      f1 = new TF1("f1",LineShapeGaussian,fit_low,fit_high,5);
+   }else{
+      f1 = new TF1("f1",LineShapeLorentz,fit_low,fit_high,5);
    }
+
    f1->SetParName(0,"Baseline");
    f1->SetParName(1,"Amplitude");
    f1->SetParName(2,"Centroid");
@@ -433,9 +516,13 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    f1->SetParameter(0,BaseL); f1->SetParLimits(0,BaseL_low,BaseL_high);
    f1->SetParameter(1,Amp); f1->SetParLimits(1,Amp_low,Amp_high);
    f1->SetParameter(2,Centroid); f1->SetParLimits(2,Centroid_low,Centroid_high);
-   f1->SetParameter(3,Mod); f1->SetParLimits(3,Mod_low,Mod_high);
+   if(type==0 || type==1 || type==2){
+      f1->SetParameter(3,Mod); f1->SetParLimits(3,Mod_low,Mod_high);
+   }else{
+      f1->FixParameter(3,0);
+   }
    f1->SetParameter(4,Width); f1->SetParLimits(4,Width_low,Width_high);
-   gSpec->Fit("f1","EMR","D");
+   gSpec->Fit("f1","EMR0","D");
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
@@ -445,12 +532,15 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    cout<<"Modulation = "<<f1->GetParameter(3)<<" +/- "<<f1->GetParError(3)<<endl;
    cout<<"Width = "<<f1->GetParameter(4)<<" +/- "<<f1->GetParError(4)<<endl;
 
+   TCanvas *c2;
    if(gROOT->FindObject("c2")!=0){
-      gROOT->FindObject("c2")->Delete();
+      c2 = (TCanvas*) gROOT->FindObject("c2");
+   }else{
+      c2 = new TCanvas("c2","c2",0,0,800,500);
    }
-   TCanvas* c2 = new TCanvas("c2","c2",0,0,800,500);
    c2->cd();
    gSpec->Draw("AP");
+   f1->Draw("same");
 
    //plot the fitting result to figure
    TLatex text0;
@@ -555,7 +645,7 @@ void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value,
          }
       }
       Mean = Mean/SumSigma;
-      MeanError = sqrt(1/SumSigma);
+      //MeanError = sqrt(1/SumSigma);
       MeanDev = 0;
    }
    float TotalError = sqrt(MeanError*MeanError + MeanDev*MeanDev);

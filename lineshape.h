@@ -11,8 +11,8 @@ Double_t LineShapeMarieke(Double_t *x, Double_t *p){
 
 Double_t LineShapeRamp(Double_t *x, Double_t *p){
    //the function is taken from the Ph.D thesis of D.Yordanov, Eq. 2.68.
-   double LS = atan(2*(x[0]-p[2]+p[3])/p[4]) - atan(2*(x[0]-p[2]-p[3])/p[4]);
-   double Norm = 2*atan(2*p[3]/p[4]);
+   double LS = atan((x[0]-p[2]+p[3])/p[4]) - atan((x[0]-p[2]-p[3])/p[4]);
+   double Norm = 2*atan(p[3]/p[4]);
    double NormLS = LS/Norm;
    return p[0] + p[1] * NormLS;
 }
@@ -37,7 +37,17 @@ Double_t LineShapeSine(Double_t *x, Double_t *p){
    double amp = p[1]; //amplitude
    double cent = p[2]; //centroid
    double mod = p[3]; //modulation
-   double width = p[4]; //width
+   double width = p[4]*2.0; //width
    double NormLS = GaussChebyshevInt(50,x[0],cent,mod,width)/GaussChebyshevInt(50,cent,cent,mod,width);
    return basel + amp * NormLS;
+}
+
+Double_t LineShapeGaussian(Double_t *x, Double_t *p){
+   //simple gaussian profile
+   return p[0]+p[1]*exp(-0.5*pow((x[0]-p[2])/p[4],2));
+}
+
+Double_t LineShapeLorentz(Double_t *x, Double_t *p){
+   //Lorentzian profile
+   return p[0]+p[1]*pow(p[4],2)/(pow(x[0]-p[2],2)+pow(p[4],2));
 }

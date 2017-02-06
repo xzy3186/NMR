@@ -206,6 +206,7 @@ public :
    virtual void     PlotSpec();
    virtual void     SaveSpec();
    virtual void     FitSpec(int type, double fit_low, double fit_high);
+   virtual void     FitSpecCompare(double fit_low, double fit_high);
    virtual void     Bootstrapping();
    virtual Long64_t GetTime();
    virtual double   GetFieldHP();
@@ -476,12 +477,14 @@ double NMR::GetFieldCenter(){
 }
 
 double NMR::CalFieldCenterBefore(double FieldHP){
-   double FieldCenter = (FieldHP + 0.971479535)/0.9931743532;
+   //double FieldCenter = (FieldHP + 0.971479535)/0.9931743532;
+   double FieldCenter = FieldHP * 1.00692 + 0.29;
    return FieldCenter;
 }
 
 double NMR::CalFieldCenterAfter(double FieldHP){
-   double FieldCenter = (FieldHP - 0.526407778)/0.9929154674;
+   //double FieldCenter = (FieldHP - 0.526407778)/0.992867;
+   double FieldCenter = FieldHP * 1.00718 - 0.25;
    return FieldCenter;
 }
 
