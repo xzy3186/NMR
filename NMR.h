@@ -86,9 +86,9 @@ public :
    double FieldAvgCenterBefore; //magnetic field at the center position, calibrated before the run
    double FieldAvgCenterAfter; //magnetic field at the center position, calibrated after the run
    double FieldAvgCenter; //magnetic field at the center position, average of the previous two
+   double FitCent, FitCentError, FitAmp, FitAmpError;
    double E_GammaH_cal, E_GammaG_cal;
    int NumFreq;
-   double gFreq[30], gAsymm[30], gFreqErr[30], gAsymmErr[30];
    int CtsUp[5000], CtsDown[5000];
    Long64_t time;
    std::set<int> freqset;
@@ -119,6 +119,7 @@ public :
 
    //parameters read from input file
    int NMRorNQR; //0: NMR, 1: NQR
+   int IfField; //0: no requirement on field readout, 1: require non-zero field readout
    int TimeCut;
    int TiD3Cut;
    int EUpMin, EUpMax;
@@ -195,7 +196,7 @@ public :
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
    virtual void     InitPara();
-   virtual void     Loop();
+   virtual void     Analysis();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
    virtual int      ReadPara(const char* filename);
@@ -274,13 +275,11 @@ void NMR::InitPara(){
    IfTiD3 = 0;
    E_GammaH_cal = 0;
    E_GammaG_cal = 0;
+   FitCent = 0;
+   FitCentError = 0;
+   FitAmp = 0;
+   FitAmpError = 0;
    time = 0;
-   for(int i=0; i<30; i++){
-      gFreq[i]=0;
-      gAsymm[i]=0;
-      gFreqErr[i]=0;
-      gAsymmErr[i]=0;
-   }
    for(int i=0; i<5000; i++){
       CtsUp[i]=0;
       CtsDown[i]=0;

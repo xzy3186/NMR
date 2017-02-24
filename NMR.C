@@ -11,6 +11,7 @@
 #include <TLegend.h>
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 #include "lineshape.h"
 
@@ -24,6 +25,8 @@ int NMR::ReadPara(const char* filename){
          NMRorNQR = 0;
       }else if(strcmp(temp,"NQR")==0){
          NMRorNQR = 1;
+      }else if(strcmp(temp,"IFFIELD")==0){
+         fscanf(fin,"%d",&IfField);
       }else if(strcmp(temp,"TIMECUT")==0){
          fscanf(fin,"%i",&TimeCut);
       }else if(strcmp(temp,"TID3CUT")==0){
@@ -87,7 +90,7 @@ int NMR::ReadFitPara(const char* filename){
    return 1;
 }
 
-void NMR::Loop()
+void NMR::Analysis()
 {
 //   In a ROOT session, you can do:
 //      Root > .L NMR.C
@@ -157,7 +160,7 @@ void NMR::Loop()
          time_next = time_present + 1000;
          TiD3_previous = TiD3_present;
       }
-      if(FLAG==100 || FIELD==0){
+      if(FLAG==100 || (IfField==1&&FIELD==0)){
          time_previous = time_present;
          continue;
       }
@@ -215,6 +218,9 @@ void NMR::Loop()
       if(NMRorNQR==1 && freq>1500){
          freq = 1500;
       }
+      if(NMRorNQR==0 && freq<500){
+         freq = 2100;
+      }
       //if(NMRorNQR==0 && freq>2200 && freq<2800){
       //   freq = 2500;
       //}
@@ -247,19 +253,18 @@ void NMR::MakeSpec(){
 
    cout<< freqset.size() <<" frequencies found:"<< endl;
    cout<<"id, Freq, CtsUp, CtsDown, Asymm, AsymmError"<<endl;
+   gSpec = new TGraphErrors(freqset.size());
    for(itfreqset=freqset.begin(); itfreqset!=freqset.end(); itfreqset++){
       int ffreq = *itfreqset;
       int fup = CtsUp[ffreq], fdown = CtsDown[ffreq];
-      gFreq[NumFreq] = ffreq;
-      gAsymm[NumFreq] = (double)(fup - fdown)/(fup + fdown);
-      //gFreqErr[NumFreq] = Mod;
-      gFreqErr[NumFreq] = 0;
-      gAsymmErr[NumFreq] = sqrt(4.0*fup*fdown/pow(fup+fdown,3));
-      cout<<NumFreq<<", "<<ffreq<<", "<<fup<<", "<<fdown<<", "<<gAsymm[NumFreq]<<", "<<gAsymmErr[NumFreq]<<endl;
+      double gAsymm = (double)(fup - fdown)/(fup + fdown);
+      double gAsymmErr = sqrt(4.0*fup*fdown/pow(fup+fdown,3));
+      cout<<NumFreq<<", "<<ffreq<<", "<<fup<<", "<<fdown<<", "<<gAsymm<<", "<<gAsymmErr<<endl;
+      gSpec->SetPoint(NumFreq, ffreq, gAsymm);
+      gSpec->SetPointError(NumFreq, 0, gAsymmErr);
       NumFreq++;
    }
    cout<<"Total Data taking time: "<<time/1000./60<<" min."<<endl;
-   gSpec = new TGraphErrors(NumFreq,gFreq,gAsymm,gFreqErr,gAsymmErr);
    gSpec->SetMarkerStyle(20);
    gSpec->SetLineWidth(0);
    gSpec->SetMarkerSize(1);
@@ -400,10 +405,15 @@ void NMR::Bootstrapping(){
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      //just for test, to sum RF-OFF freq at different position.
+      ////just for test, to sum RF-OFF freq at different position.
       //if(freq>2260 && freq<2900){
       //   freq = 2500;
       //}
+      //just for 34mAl to remove the first data point with different baseline.
+      if(freq<1400){
+         index++;
+         continue;
+      }
 
       if(GoUp){
          CtsUp[freq]++;
@@ -531,6 +541,10 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    cout<<"Centroid = "<<f1->GetParameter(2)<<" +/- "<<f1->GetParError(2)<<endl;
    cout<<"Modulation = "<<f1->GetParameter(3)<<" +/- "<<f1->GetParError(3)<<endl;
    cout<<"Width = "<<f1->GetParameter(4)<<" +/- "<<f1->GetParError(4)<<endl;
+   FitCent = f1->GetParameter(2);
+   FitCentError = f1->GetParError(2);
+   FitAmp = f1->GetParameter(1);
+   FitAmpError = f1->GetParError(1);
 
    TCanvas *c2;
    if(gROOT->FindObject("c2")!=0){
@@ -598,46 +612,50 @@ void A_Times_B(double A, double Aerr, double B, double Berr){
    cout<<"C = "<<C<<", error = "<<Cerr<<endl;
 }
 
-int ReadDataPoint(const char* filename, int* IntArray, float* NumArray, float* ErrorArray){
+int ReadDataPoint(const char* filename, vector<int> &IntArray, vector<float> &NumArray1, vector<float> &NumArray2){
    int index;
-   float num, error;
+   float num1, num2;
    FILE *fin = fopen(filename,"r");
    int i = 0;
-   while(!feof(fin)){
-      fscanf(fin,"%d %f %f",&index,&num,&error);
-      IntArray[i] = index;
-      NumArray[i] = num;
-      ErrorArray[i] = error;
+   IntArray.clear();
+   NumArray1.clear();
+   NumArray2.clear();
+   while(fscanf(fin,"%d %f %f",&index,&num1,&num2)==3){
+      IntArray.push_back(index);
+      NumArray1.push_back(num1);
+      NumArray2.push_back(num2);
       i++;
    }
+   cout<<"total dim = "<<i<<endl;
    return i;
 }
 
 void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value, type=1: weighted mean value
-   const int dim = 100;
-   int IndexArray[dim];
-   float NumArray[dim], ErrorArray[dim];
-   int RealDim = ReadDataPoint(filename, IndexArray, NumArray, ErrorArray);
-   TGraphErrors* gData = new TGraphErrors(RealDim);
+   vector<int> IndexArray;
+   vector<float> NumArray, ErrorArray;
+   int dim = ReadDataPoint(filename, IndexArray, NumArray, ErrorArray);
+   TGraphErrors* gData = new TGraphErrors(dim);
    float Mean = 0, MeanError = 0, MeanDev = 0;
    float SumSigma = 0;
-   for(int i=0; i<RealDim; i++){
+   for(int i=0; i<dim; i++){
       gData->SetPoint(i, IndexArray[i], NumArray[i]);
       gData->SetPointError(i, 0, ErrorArray[i]);
    }
 
    if(type == 0){
-      for(int i=0; i<RealDim; i++){
-         Mean = Mean + NumArray[i]/RealDim;
-         MeanError = MeanError + ErrorArray[i]/RealDim;
+      for(int i=0; i<dim; i++){
+         cout<<"i = "<<i<<", num = "<<NumArray[i]<<", error = "<<ErrorArray[i]<<endl;
+         Mean = Mean + NumArray[i]/dim;
+         MeanError = MeanError + ErrorArray[i]/dim;
       }
-      for(int i=0; i<RealDim; i++){
-         MeanDev = MeanDev + pow((NumArray[i]-Mean),2)/(RealDim-1);
+      for(int i=0; i<dim; i++){
+         MeanDev = MeanDev + pow((NumArray[i]-Mean),2)/(dim-1);
       }
       MeanDev = sqrt(MeanDev);
    }else if(type == 1){
       MeanError = 100;
-      for(int i=0; i<RealDim; i++){
+      for(int i=0; i<dim; i++){
+         cout<<"i = "<<i<<", num = "<<NumArray[i]<<", error = "<<ErrorArray[i]<<endl;
          Mean = Mean + NumArray[i]/pow(ErrorArray[i],2);
          SumSigma = SumSigma + 1/pow(ErrorArray[i],2);
          if(ErrorArray[i]<MeanError){
@@ -645,7 +663,7 @@ void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value,
          }
       }
       Mean = Mean/SumSigma;
-      //MeanError = sqrt(1/SumSigma);
+      MeanError = sqrt(1/SumSigma);
       MeanDev = 0;
    }
    float TotalError = sqrt(MeanError*MeanError + MeanDev*MeanDev);
@@ -657,19 +675,19 @@ void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value,
 
    float offset = 0.5*fabs(IndexArray[0]-IndexArray[1]);
    gMean->SetPoint(0, IndexArray[0]-offset, Mean);
-   gMean->SetPoint(1, IndexArray[RealDim-1]+offset, Mean);
+   gMean->SetPoint(1, IndexArray[dim-1]+offset, Mean);
    gMean->SetLineWidth(3);
 
    gDev->SetPoint(0, IndexArray[0]-offset, Mean+MeanDev);
-   gDev->SetPoint(1, IndexArray[RealDim-1]+offset, Mean+MeanDev);
-   gDev->SetPoint(2, IndexArray[RealDim-1]+offset, Mean-MeanDev);
+   gDev->SetPoint(1, IndexArray[dim-1]+offset, Mean+MeanDev);
+   gDev->SetPoint(2, IndexArray[dim-1]+offset, Mean-MeanDev);
    gDev->SetPoint(3, IndexArray[0]-offset, Mean-MeanDev);
    gDev->SetFillStyle(1001);
    gDev->SetFillColor(12);
 
    gError->SetPoint(0, IndexArray[0]-offset, Mean+TotalError);
-   gError->SetPoint(1, IndexArray[RealDim-1]+offset, Mean+TotalError);
-   gError->SetPoint(2, IndexArray[RealDim-1]+offset, Mean-TotalError);
+   gError->SetPoint(1, IndexArray[dim-1]+offset, Mean+TotalError);
+   gError->SetPoint(2, IndexArray[dim-1]+offset, Mean-TotalError);
    gError->SetPoint(3, IndexArray[0]-offset, Mean-TotalError);
    gError->SetFillStyle(1001);
    gError->SetFillColor(16);
@@ -694,3 +712,21 @@ void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value,
    gData->Draw("P");
 }
 
+void PlotHistgram(const char* filename, int index){
+   vector<int> IndexArray;
+   vector<float> NumArray1, NumArray2;
+   int dim = ReadDataPoint(filename, IndexArray, NumArray1, NumArray2);
+   TH1F* h1 = new TH1F("h1", "Centroid distribution", 400, 1800, 2200);
+   for(int i=0; i<dim; i++){
+      if(index == 0){
+         h1->Fill(NumArray1[i]);
+      }else if(index == 1){
+         h1->Fill(NumArray2[i]);
+      }
+   }
+   h1->GetXaxis()->SetNdivisions(508);
+   h1->GetXaxis()->SetTitle("Centroid (kHz)");
+   h1->GetXaxis()->CenterTitle(true);
+   h1->GetXaxis()->SetTickLength(-0.03);
+   h1->Draw();
+}
