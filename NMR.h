@@ -11,8 +11,10 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 #include <TGraphErrors.h>
 #include <TH1.h>
+#include <TH2.h>
 #include <iostream>
 #include <set>
 #include <vector>
@@ -98,6 +100,9 @@ public :
    TGraphErrors *gSpec;
    TGraph *gTiD3_T, *gTiD3_T_cut;
    TH1F *h_GammaH_cal, *h_GammaG_cal;
+   TH1F *h_GammaAll, *h_GammaAll_notime;
+   TH2F *h_GG_Matrix;
+   TH1F *h_GammaH_cal_notime, *h_GammaG_cal_notime;
    TH1F *h_EUp, *h_EDown;
    //TH1F *h_TAC_delta_gH, *h_TAC_delta_gG;
 
@@ -116,6 +121,11 @@ public :
    double c2_GammaH_L;   //2nd-order term for 2016
    double c1_GammaG_L;    //2nd-order term for 2016
    double c2_GammaG_L;   //2nd-order term for 2016
+
+   double d2_GammaH_L; //3rd-order
+   double d2_GammaG_L;
+   double e2_GammaH_L; //4th-order
+   double e2_GammaG_L;
 
    //parameters read from input file
    int NMRorNQR; //0: NMR, 1: NQR
@@ -293,6 +303,23 @@ void NMR::InitPara(){
       gROOT->FindObject("h_GammaG_cal")->Delete();
    }
    h_GammaG_cal = new TH1F("h_GammaG_cal","h_GammaG_cal",4000,0,4000);
+   if(gROOT->FindObject("h_GammaH_cal_notime")!=0){
+      gROOT->FindObject("h_GammaH_cal_notime")->Delete();
+   }
+   h_GammaH_cal_notime = new TH1F("h_GammaH_cal_notime","h_GammaH_cal_notime",4000,0,4000);
+   if(gROOT->FindObject("h_GammaG_cal_notime")!=0){
+      gROOT->FindObject("h_GammaG_cal_notime")->Delete();
+   }
+   h_GammaG_cal_notime = new TH1F("h_GammaG_cal_notime","h_GammaG_cal_notime",4000,0,4000);
+   if(gROOT->FindObject("h_GammaAll")!=0){
+      gROOT->FindObject("h_GammaAll")->Delete();
+   }
+   h_GammaAll = new TH1F("h_GammaAll","h_GammaAll",6000,0,6000);
+   if(gROOT->FindObject("h_GammaAll_notime")!=0){
+      gROOT->FindObject("h_GammaAll_notime")->Delete();
+   }
+   h_GammaAll_notime = new TH1F("h_GammaAll_notime","h_GammaAll_notime",6000,0,6000);
+
    if(gROOT->FindObject("h_EUp")!=0){
       gROOT->FindObject("h_EUp")->Delete();
    }
@@ -301,25 +328,48 @@ void NMR::InitPara(){
       gROOT->FindObject("h_EDown")->Delete();
    }
    h_EDown = new TH1F("h_EDown","h_EDown",1600,0,16000);
+   if(gROOT->FindObject("h_GG_Matrix")!=0){
+      gROOT->FindObject("h_GG_Matrix")->Delete();
+   }
+   h_GG_Matrix = new TH2F("h_GG_Matrix","h_GG_Matrix",4000,0,4000,4000,0,4000);
    //h_TAC_delta_gH = new TH1F("h_TAC_delta_gH","h_TAC_delta_gH",1600,0,16000);
    //h_TAC_delta_gG = new TH1F("h_TAC_delta_gG","h_TAC_delta_gG",1600,0,16000);
    TiD3_T.clear();
    TiD3_T_cut.clear();
 
-   a1_GammaH_L = 0.263796;  //slope for April 2016 
-   a2_GammaH_L = 0.264627;  //slope for April 2016 
-   a1_GammaG_L = 0.290285;  //slope for April 2016 
-   a2_GammaG_L = 0.295908;  //slope for April 2016 
+   //a1_GammaH_L = 0.263796;  //slope for April 2016 
+   //b1_GammaH_L =-0.595466;  //offset for April 2016
+   //c1_GammaH_L = -7.16087e-8;   //2nd-order term, for 2016
 
-   b1_GammaH_L =-0.595466;  //offset for April 2016
-   b2_GammaH_L =-3.42253;  //offset for April 2016
-   b1_GammaG_L = 6.34802;  //offset for April 2016
-   b2_GammaG_L = 1.16329;  //offset for April 2016
+   //a2_GammaH_L = 0.264627;  //slope for April 2016 
+   //b2_GammaH_L =-3.42253;  //offset for April 2016
+   //c2_GammaH_L = -6.05763e-8;   //2nd-order term for 2016
 
-   c1_GammaH_L = -7.16087e-8;   //2nd-order term, for 2016
-   c2_GammaH_L = -6.05763e-8;   //2nd-order term for 2016
-   c1_GammaG_L = 1.51486e-6;    //2nd-order term for 2016   
-   c2_GammaG_L = 1.17181e-7;   //2nd-order term for 2016
+   //a1_GammaG_L = 0.290285;  //slope for April 2016 
+   //b1_GammaG_L = 6.34802;  //offset for April 2016
+   //c1_GammaG_L = 1.51486e-6;    //2nd-order term for 2016
+
+   //a2_GammaG_L = 0.295908;  //slope for April 2016 
+   //b2_GammaG_L = 1.16329;  //offset for April 2016
+   //c2_GammaG_L = 1.17181e-7;   //2nd-order term for 2016
+
+   //Updated calibration parameters
+   a1_GammaH_L = 0.263473;  //slope for April 2016 
+   b1_GammaH_L =-0.446142;  //offset for April 2016
+   c1_GammaH_L = 2.9876e-8; //2nd-order term, for 2016
+
+   a2_GammaH_L = 0.263756;  //slope for April 2016 
+   b2_GammaH_L =-1.3925;   //offset for April 2016
+   c2_GammaH_L = 2.97358e-8;  //2nd-order term for 2016
+
+   a1_GammaG_L = 0.292499;  //slope for April 2016 
+   b1_GammaG_L = 5.29869;  //offset for April 2016
+   c1_GammaG_L = 7.49365e-7;    //2nd-order term for 2016
+
+   a2_GammaG_L = 0.296244;  //slope for April 2016 
+   b2_GammaG_L = 0.499282;  //offset for April 2016
+   c2_GammaG_L = 7.3398e-8;   //2nd-order term for 2016
+
 }
 
 void NMR::Init(TTree *tree)
@@ -420,18 +470,20 @@ Float_t rand05(){
 }
 
 void NMR::CalibGammaH(){
+   double ee = E_GammaH_L+rand05();
    if(E_GammaH_L<=3000){
-      E_GammaH_cal = a1_GammaH_L*Float_t(E_GammaH_L + rand05()) + b1_GammaH_L + c1_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
+      E_GammaH_cal = a1_GammaH_L*ee + b1_GammaH_L + c1_GammaH_L*ee*ee;
    }else{
-      E_GammaH_cal = a2_GammaH_L*Float_t(E_GammaH_L + rand05()) + b2_GammaH_L + c2_GammaH_L*Float_t(E_GammaH_L + rand05())*Float_t(E_GammaH_L + rand05());
+      E_GammaH_cal = a2_GammaH_L*ee + b2_GammaH_L + c2_GammaH_L*ee*ee;
    }
 }
 
 void NMR::CalibGammaG(){
+   double ee = E_GammaG_L+rand05();
    if(E_GammaG_L<=3000){
-      E_GammaG_cal = a1_GammaG_L*Float_t(E_GammaG_L + rand05()) + b1_GammaG_L + c1_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
+      E_GammaG_cal = a1_GammaG_L*ee + b1_GammaG_L + c1_GammaG_L*ee*ee;
    }else{
-      E_GammaG_cal = a2_GammaG_L*Float_t(E_GammaG_L + rand05()) + b2_GammaG_L + c2_GammaG_L*Float_t(E_GammaG_L + rand05())*Float_t(E_GammaG_L + rand05());
+      E_GammaG_cal = a2_GammaG_L*ee + b2_GammaG_L + c2_GammaG_L*TMath::Power(ee,2) + d2_GammaG_L*TMath::Power(ee,3) + e2_GammaG_L*TMath::Power(ee,4);
    }
 }
 

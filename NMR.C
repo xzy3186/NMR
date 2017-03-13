@@ -1,6 +1,5 @@
 #define NMR_cxx
 #include "NMR.h"
-#include <TH2.h>
 #include <TF1.h>
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -131,6 +130,15 @@ void NMR::Analysis()
    double field_each_event;
    Long64_t ntotal = 0;
 
+   //create a new tree (in a new root file) for the gamma-ray analysis
+   TFile* hfile=new TFile("figure/Tree_Gamma.root","RECREATE");
+   double E[2], T[2];
+   int ch[2];
+   TTree *tree = new TTree("tree","A tree for gamma ray");
+   tree->Branch("E",&E,"E[2]/D");
+   tree->Branch("T",&T,"T[2]/D");
+   tree->Branch("ch",&ch,"ch[2]/I");
+
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       if(jentry%500000==0){
          cout<<jentry<<" events have been analyzed"<<endl;
@@ -235,8 +243,28 @@ void NMR::Analysis()
       if(GoDown){
          CtsDown[freq]++;
       }
-      h_GammaH_cal->Fill(E_GammaH_cal);
-      h_GammaG_cal->Fill(E_GammaG_cal);
+      h_GammaH_cal_notime->Fill(E_GammaH_cal);
+      h_GammaAll_notime->Fill(E_GammaH_cal);
+      if(TAC_Delta_gH>500 && TAC_Delta_gH<10000){
+         h_GammaH_cal->Fill(E_GammaH_cal);
+         h_GammaAll->Fill(E_GammaH_cal);
+      }
+      h_GammaG_cal_notime->Fill(E_GammaG_cal);
+      h_GammaAll_notime->Fill(E_GammaG_cal);
+      if(TAC_Delta_gG>500 && TAC_Delta_gG<10000){
+         h_GammaG_cal->Fill(E_GammaG_cal);
+         h_GammaAll->Fill(E_GammaG_cal);
+      }
+      if(TAC_Delta_gH>500 && TAC_Delta_gH<10000 && TAC_Delta_gG>500 && TAC_Delta_gG<10000){
+         h_GG_Matrix->Fill(E_GammaH_cal,E_GammaG_cal);
+      }
+      E[0]=E_GammaH_cal;
+      T[0]=TAC_Delta_gH;
+      ch[0]=0;
+      E[1]=E_GammaG_cal;
+      T[1]=TAC_Delta_gG-1500;
+      ch[1]=1;
+      tree->Fill();
       h_EUp->Fill(E_Up);
       h_EDown->Fill(E_Down);
       freqset.insert(freq);
@@ -246,6 +274,7 @@ void NMR::Analysis()
    FieldAvgCenterAfter = CalFieldCenterAfter(FieldAvgHP);
    FieldAvgCenter = CalFieldCenter(FieldAvgHP);
    cout<<"Both beta UP and DOWN were fired for "<<count<<" times."<<endl;
+   hfile->Write();
 }
 
 void NMR::MakeSpec(){
@@ -405,10 +434,10 @@ void NMR::Bootstrapping(){
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      ////just for test, to sum RF-OFF freq at different position.
-      //if(freq>2260 && freq<2900){
-      //   freq = 2500;
-      //}
+      //just for test, to sum RF-OFF freq at different position.
+      if(freq>2260 && freq<2900){
+         freq = 2500;
+      }
       //just for 34mAl to remove the first data point with different baseline.
       if(freq<1400){
          index++;
