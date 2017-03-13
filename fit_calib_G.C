@@ -1,5 +1,5 @@
 {
-   TGraph *calib1=new TGraph(9);
+   TGraph *calib1=new TGraph(11);
 
    calib1->SetPoint(0, 395.581, 121.78 );
    calib1->SetPoint(1, 818.951, 244.7  );
@@ -10,6 +10,8 @@
    calib1->SetPoint(6, 3748.65, 1112.07);
    calib1->SetPoint(7, 4745.43, 1408.01);
    calib1->SetPoint(8, 8805.47, 2614.05);
+   calib1->SetPoint(9, 11195.4, 3327.1);//from 34Si
+   calib1->SetPoint(10, 14318.3, 4257.0);//from 34Si
 
    TGraph *calib2=new TGraph(3);
    calib2->SetPoint(0, 2809.68, 121.78 );
@@ -29,7 +31,7 @@
    TF1 *ff1 = new TF1("ff1","pol2",0,3800);
    ff1->SetParameter(0,-1);
    ff1->SetParameter(1,0.26);
-   TF1 *ff2 = new TF1("ff2","pol2",3200,16000);
+   TF1 *ff2 = new TF1("ff2","pol2",3200,16500);
    ff2->SetParameter(0,-1);
    ff2->SetParameter(1,0.26);
 
