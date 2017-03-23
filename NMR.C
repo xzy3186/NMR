@@ -283,6 +283,12 @@ void NMR::MakeSpec(){
    cout<< freqset.size() <<" frequencies found:"<< endl;
    cout<<"id, Freq, CtsUp, CtsDown, Asymm, AsymmError"<<endl;
    gSpec = new TGraphErrors(freqset.size());
+   double MaxAsymm = 0;
+   if(Amp>0){
+      MaxAsymm = -1;
+   }else if(Amp<0){
+      MaxAsymm = 1;
+   }
    for(itfreqset=freqset.begin(); itfreqset!=freqset.end(); itfreqset++){
       int ffreq = *itfreqset;
       int fup = CtsUp[ffreq], fdown = CtsDown[ffreq];
@@ -291,6 +297,19 @@ void NMR::MakeSpec(){
       cout<<NumFreq<<", "<<ffreq<<", "<<fup<<", "<<fdown<<", "<<gAsymm<<", "<<gAsymmErr<<endl;
       gSpec->SetPoint(NumFreq, ffreq, gAsymm);
       gSpec->SetPointError(NumFreq, 0, gAsymmErr);
+      VecAsymm.push_back(gAsymm);
+      VecAsymmError.push_back(gAsymmErr);
+      if(Amp>0){
+         if(gAsymm > MaxAsymm){
+            MaxAsymmFreq = ffreq;
+            MaxAsymm = gAsymm;
+         }
+      }else if(Amp<0){
+         if(gAsymm < MaxAsymm){
+            MaxAsymmFreq = ffreq;
+            MaxAsymm = gAsymm;
+         }
+      }
       NumFreq++;
    }
    cout<<"Total Data taking time: "<<time/1000./60<<" min."<<endl;
@@ -438,11 +457,11 @@ void NMR::Bootstrapping(){
       if(freq>2260 && freq<2900){
          freq = 2500;
       }
-      //just for 34mAl to remove the first data point with different baseline.
-      if(freq<1400){
-         index++;
-         continue;
-      }
+      ////just for 34mAl to remove the first data point with different baseline.
+      //if(freq<1400){
+      //   index++;
+      //   continue;
+      //}
 
       if(GoUp){
          CtsUp[freq]++;
@@ -741,11 +760,11 @@ void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value,
    gData->Draw("P");
 }
 
-void PlotHistgram(const char* filename, int index){
+TH1F* PlotHistogram(const char* filename, int index, int numbin, int bin1, int bin2){
    vector<int> IndexArray;
    vector<float> NumArray1, NumArray2;
    int dim = ReadDataPoint(filename, IndexArray, NumArray1, NumArray2);
-   TH1F* h1 = new TH1F("h1", "Centroid distribution", 400, 1800, 2200);
+   TH1F* h1 = new TH1F("h1", "Centroid distribution", numbin, bin1, bin2);
    for(int i=0; i<dim; i++){
       if(index == 0){
          h1->Fill(NumArray1[i]);
@@ -757,5 +776,5 @@ void PlotHistgram(const char* filename, int index){
    h1->GetXaxis()->SetTitle("Centroid (kHz)");
    h1->GetXaxis()->CenterTitle(true);
    h1->GetXaxis()->SetTickLength(-0.03);
-   h1->Draw();
+   return h1;
 }

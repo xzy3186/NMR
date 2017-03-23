@@ -91,7 +91,9 @@ public :
    double FitCent, FitCentError, FitAmp, FitAmpError;
    double E_GammaH_cal, E_GammaG_cal;
    int NumFreq;
+   vector<double> VecAsymm, VecAsymmError;
    int CtsUp[5000], CtsDown[5000];
+   int MaxAsymmFreq;
    Long64_t time;
    std::set<int> freqset;
    std::set<int>::iterator itfreqset;
@@ -282,6 +284,9 @@ void NMR::InitPara(){
    FieldAvgCenterAfter = 0;
    FieldAvgCenter = 0;
    NumFreq = 0;
+   freqset.clear();
+   VecAsymm.clear();
+   VecAsymmError.clear();
    IfTiD3 = 0;
    E_GammaH_cal = 0;
    E_GammaG_cal = 0;
@@ -290,11 +295,11 @@ void NMR::InitPara(){
    FitAmp = 0;
    FitAmpError = 0;
    time = 0;
+   MaxAsymmFreq = 0;
    for(int i=0; i<5000; i++){
       CtsUp[i]=0;
       CtsDown[i]=0;
    }
-   freqset.clear();
    if(gROOT->FindObject("h_GammaH_cal")!=0){
       gROOT->FindObject("h_GammaH_cal")->Delete();
    }
@@ -529,13 +534,13 @@ double NMR::GetFieldCenter(){
 
 double NMR::CalFieldCenterBefore(double FieldHP){
    //double FieldCenter = (FieldHP + 0.971479535)/0.9931743532;
-   double FieldCenter = FieldHP * 1.00692 + 0.29;
+   double FieldCenter = FieldHP * 1.00709 + 0.32;
    return FieldCenter;
 }
 
 double NMR::CalFieldCenterAfter(double FieldHP){
    //double FieldCenter = (FieldHP - 0.526407778)/0.992867;
-   double FieldCenter = FieldHP * 1.00718 - 0.25;
+   double FieldCenter = FieldHP * 1.00733 - 0.15;
    return FieldCenter;
 }
 

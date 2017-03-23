@@ -38,6 +38,8 @@
 
    ////32Al, NMR, Mod = 45 kHz
    //AutoTree->Add("root-files/r0097.root");
+
+   ////32Al, NMR, Mod = 45 kHz, different RF power
    //AutoTree->Add("root-files/r0099.root");
 
    ////32Al, NMR, Mod = 45 kHz, different steps
@@ -111,8 +113,8 @@
    //AutoTree->Add("root-files/r0138.root");
 
    /******* NQR Runs ********/
-   //32Al, NQR, Mod = 60 kHz
-   AutoTree->Add("root-files/r0102.root");
+   ////32Al, NQR, Mod = 60 kHz
+   //AutoTree->Add("root-files/r0102.root");
 
    ////32Al, NQR, Mod = 60 kHz, different steps
    //AutoTree->Add("root-files/r0155.root");
@@ -123,33 +125,68 @@
    //AutoTree->Add("root-files/r0105.root");
    //AutoTree->Add("root-files/r0107.root");
 
-   //32Al, NQR, Mod = 40 kHz, different Larmor frequency, no FIELD information
+   ////32Al, NQR, Mod = 40 kHz, different Larmor frequency, no FIELD information
    //AutoTree->Add("root-files/r0108.root");
 
-   ////34mAl, NQR, Mod = 60 kHz
-   //AutoTree->Add("root-files/r0193.root");
-   //AutoTree->Add("root-files/r0194.root");
-   //AutoTree->Add("root-files/r0195.root");
-   //AutoTree->Add("root-files/r0197.root");
-   ////AutoTree->Add("root-files/r0199.root");
-   //AutoTree->Add("root-files/r0200.root");
-   //AutoTree->Add("root-files/r0203.root");
-   //AutoTree->Add("root-files/r0204.root");
-   //AutoTree->Add("root-files/r0205.root");
-   //AutoTree->Add("root-files/r0206.root");
-   //AutoTree->Add("root-files/r0207.root");
-   //AutoTree->Add("root-files/r0208.root");
-   //AutoTree->Add("root-files/r0209.root");
-   //AutoTree->Add("root-files/r0210.root");
+   //34mAl, NQR, Mod = 60 kHz
+   AutoTree->Add("root-files/r0193.root");
+   AutoTree->Add("root-files/r0194.root");
+   AutoTree->Add("root-files/r0195.root");
+   AutoTree->Add("root-files/r0197.root");
+   AutoTree->Add("root-files/r0199.root");
+   AutoTree->Add("root-files/r0200.root");
+   AutoTree->Add("root-files/r0203.root");
+   AutoTree->Add("root-files/r0204.root");
+   AutoTree->Add("root-files/r0205.root");
+   AutoTree->Add("root-files/r0206.root");
+   AutoTree->Add("root-files/r0207.root");
+   AutoTree->Add("root-files/r0208.root");
+   AutoTree->Add("root-files/r0209.root");
+   AutoTree->Add("root-files/r0210.root");
 
    ////34mAl, NQR, Mod = 60 kHz, different Larmor frequency
    //AutoTree->Add("root-files/r0162.root");
    //AutoTree->Add("root-files/r0163.root");
 
    NMR *t = new NMR("",AutoTree);
-   t->ReadPara("NMR_NQR.in");
-   t->Loop();
-   //t->Bootstrapping();
-   t->MakeSpec();
-   t->PlotSpec();
+
+   ////for normal analysis
+   //t->ReadPara("NMR_NQR.in");
+   //t->Analysis();
+   //t->MakeSpec();
+   //t->PlotSpec();
+
+   //for bootstrapping
+   char pngname[128];
+   char filename1[128];
+   char filename2[128];
+   char filename3[128];
+   sprintf(filename1,"figure//34mAl_NQR_Mod60_bootstrap/centroid.txt");
+   sprintf(filename2,"figure//34mAl_NQR_Mod60_bootstrap/amplitude.txt");
+   sprintf(filename3,"figure//34mAl_NQR_Mod60_bootstrap/asymm.txt");
+   FILE *result1 = fopen(filename1,"w");
+   FILE *result2 = fopen(filename2,"w");
+   FILE *result3 = fopen(filename3,"w");
+   for(int i = 0; i<2000; i++){
+      t->ReadPara("NMR_NQR.in");
+      t->ReadFitPara("NMR_NQR_fit.in");
+      t->Bootstrapping();
+      t->MakeSpec();
+      t->PlotSpec();
+      t->FitSpec(0,0,1200);
+      cout<<"************** i = "<<i<<": centroid = "<<t->FitCent<<" ***************"<<endl;
+      sprintf(pngname,"figure//34mAl_NQR_Mod60_bootstrap/%04d.png",i+1);
+      c2->SaveAs(pngname);
+      fprintf(result1, "%d %.1f %d\n", i+1, t->FitCent, t->MaxAsymmFreq);
+      fprintf(result2, "%d %.1f %.1f\n", i+1, t->FitAmp*(-1e3), t->FitAmpError*1e3);
+      int NumFreq = t->NumFreq;
+      fprintf(result3, "%d", i+1);
+      for(int j=0; j<NumFreq; j++){
+         fprintf(result3, " %f", t->VecAsymm[j]);
+      }
+      fprintf(result3, "\n");
+   }
+   fclose(result1);
+   fclose(result2);
+   fclose(result3);
 }
