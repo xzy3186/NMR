@@ -132,6 +132,7 @@ public :
    //parameters read from input file
    int NMRorNQR; //0: NMR, 1: NQR
    int IfField; //0: no requirement on field readout, 1: require non-zero field readout
+   int II2; //nuclear spin x 2
    int TimeCut;
    int TiD3Cut;
    int EUpMin, EUpMax;

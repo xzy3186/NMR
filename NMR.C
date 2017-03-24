@@ -24,6 +24,8 @@ int NMR::ReadPara(const char* filename){
          NMRorNQR = 0;
       }else if(strcmp(temp,"NQR")==0){
          NMRorNQR = 1;
+      }else if(strcmp(temp,"II2")==0){
+         fscanf(fin,"%d",&II2);
       }else if(strcmp(temp,"IFFIELD")==0){
          fscanf(fin,"%d",&IfField);
       }else if(strcmp(temp,"TIMECUT")==0){
@@ -295,7 +297,14 @@ void NMR::MakeSpec(){
       double gAsymm = (double)(fup - fdown)/(fup + fdown);
       double gAsymmErr = sqrt(4.0*fup*fdown/pow(fup+fdown,3));
       cout<<NumFreq<<", "<<ffreq<<", "<<fup<<", "<<fdown<<", "<<gAsymm<<", "<<gAsymmErr<<endl;
-      gSpec->SetPoint(NumFreq, ffreq, gAsymm);
+      //for NQR spectrum, plot Delta rather than Q_nu
+      double Delta=0;
+      if(NMRorNQR == 1){
+         Delta = 3.0/(2*II2*(II2-1))*ffreq;
+      }else{
+         Delta = ffreq;
+      }
+      gSpec->SetPoint(NumFreq, Delta, gAsymm);
       gSpec->SetPointError(NumFreq, 0, gAsymmErr);
       VecAsymm.push_back(gAsymm);
       VecAsymmError.push_back(gAsymmErr);
@@ -575,7 +584,18 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    f1->SetParameter(1,Amp); f1->SetParLimits(1,Amp_low,Amp_high);
    f1->SetParameter(2,Centroid); f1->SetParLimits(2,Centroid_low,Centroid_high);
    if(type==0 || type==1 || type==2){
-      f1->SetParameter(3,Mod); f1->SetParLimits(3,Mod_low,Mod_high);
+      //translate from modulation on Q_nu to modulation on Delta
+      double ModDelta, ModDelta_low, ModDelta_high;
+      if(NMRorNQR == 1){
+         ModDelta = 3.0/(2*II2*(II2-1))*Mod;
+         ModDelta_low = 3.0/(2*II2*(II2-1))*Mod_low;
+         ModDelta_high = 3.0/(2*II2*(II2-1))*Mod_high;
+      }else{
+         ModDelta = Mod;
+         ModDelta_low = Mod_low;
+         ModDelta_high = Mod_high;
+      }
+      f1->SetParameter(3,ModDelta); f1->SetParLimits(3,ModDelta_low,ModDelta_high);
    }else{
       f1->FixParameter(3,0);
    }
