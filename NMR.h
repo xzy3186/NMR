@@ -209,7 +209,7 @@ public :
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
    virtual void     InitPara();
-   virtual void     Analysis();
+   virtual void     Analysis(int MergeLow=3000, int MergeHigh=4000, int MergeFreq=3500);//merge range combine all the frequencies in the range to the single point at MergeFreq.
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
    virtual int      ReadPara(const char* filename);
@@ -217,11 +217,13 @@ public :
    virtual void     CalibGammaH();
    virtual void     CalibGammaG();
    virtual void     MakeSpec();
+   virtual void     MakeSpec(int dim, int* vecFreq, double* vecAsymm, double* vecAsymmError);
    virtual void     PlotSpec();
    virtual void     SaveSpec();
-   virtual void     FitSpec(int type, double fit_low, double fit_high);
+   virtual void     FitSpec(int type, double fit_low, double fit_high, double bin_low, double bin_high, int IfText=1, const char* canvas="c2", int index_all=1, int index=0);
+   virtual void     DrawBaseLine(double bl, double ble, double bin_low, double bin_high, const char* canvas="c2", int index_all=1, int index=0);
    virtual void     FitSpecCompare(double fit_low, double fit_high);
-   virtual void     Bootstrapping();
+   virtual void     Bootstrapping(int MergeLow=3000, int MergeHigh=4000, int MergeFreq=3500);
    virtual Long64_t GetTime();
    virtual double   GetFieldHP();
    virtual double   GetFieldCenterBefore();

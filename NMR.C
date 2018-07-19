@@ -1,4 +1,6 @@
 #define NMR_cxx
+#include <iostream>
+#include <fstream>
 #include "NMR.h"
 #include <TF1.h>
 #include <TStyle.h>
@@ -91,7 +93,7 @@ int NMR::ReadFitPara(const char* filename){
    return 1;
 }
 
-void NMR::Analysis()
+void NMR::Analysis(int MergeLow, int MergeHigh, int MergeFreq)
 {
 //   In a ROOT session, you can do:
 //      Root > .L NMR.C
@@ -224,16 +226,9 @@ void NMR::Analysis()
       if(TAC_Down>TACDownMin && TAC_Down<TACDownMax && E_Down>EDownMin && E_Down<EDownMax && E_deltaDown>EDeltaDownMin && E_deltaDown<EDeltaDownMax){
          GoDown = true;
       }
-      //just for test, to sum RF-OFF freq at different position.
-      if(NMRorNQR==1 && freq>1500){
-         freq = 1500;
+      if(freq>MergeLow && freq<MergeHigh){
+         freq = MergeFreq;
       }
-      if(NMRorNQR==0 && freq<500){
-         freq = 2100;
-      }
-      //if(NMRorNQR==0 && freq>2200 && freq<2800){
-      //   freq = 2500;
-      //}
       if(GoUp && GoDown){
          count++;
          continue;
@@ -279,6 +274,70 @@ void NMR::Analysis()
    hfile->Write();
 }
 
+void NMR::MakeSpec(int dim, int* vecFreq, double* vecAsymm, double* vecAsymmError){
+
+   cout<< dim <<" frequencies found:"<< endl;
+   gSpec = new TGraphErrors(dim);
+   double MaxAsymm = 0;
+   if(Amp>0){
+      MaxAsymm = -1;
+   }else if(Amp<0){
+      MaxAsymm = 1;
+   }
+   for(int i=0; i<dim; i++){
+      int ffreq = vecFreq[i];
+      double gAsymm = vecAsymm[i];
+      double gAsymmErr = vecAsymmError[i];
+      cout<<i<<", "<<ffreq<<", "<<gAsymm<<", "<<gAsymmErr<<endl;
+      //for NQR spectrum, plot Delta rather than Q_nu
+      double Delta=0;
+      if(NMRorNQR == 1){
+         Delta = 3.0/(2*II2*(II2-1))*ffreq;
+      }else{
+         Delta = ffreq;
+      }
+      gSpec->SetPoint(i, Delta, gAsymm);
+      double ModDelta;
+      if(NMRorNQR == 1){
+         ModDelta = 3.0/(2*II2*(II2-1))*Mod;
+      }else{
+         ModDelta = Mod;
+      }
+      gSpec->SetPointError(i, ModDelta, gAsymmErr);
+      VecAsymm.push_back(gAsymm);
+      VecAsymmError.push_back(gAsymmErr);
+      if(Amp>0){
+         if(gAsymm > MaxAsymm){
+            MaxAsymmFreq = ffreq;
+            MaxAsymm = gAsymm;
+         }
+      }else if(Amp<0){
+         if(gAsymm < MaxAsymm){
+            MaxAsymmFreq = ffreq;
+            MaxAsymm = gAsymm;
+         }
+      }
+   }
+   gSpec->SetMarkerStyle(20);
+   gSpec->SetMarkerSize(1);
+   gSpec->GetXaxis()->SetNdivisions(208);
+   gSpec->GetYaxis()->SetNdivisions(408);
+   //gSpec->SetLineWidth(0);
+   //gSpec->GetXaxis()->SetTitle("Freq. [kHz]");
+   //gSpec->GetYaxis()->SetTitle("Asymm.");
+   if(NMRorNQR==0){
+      gSpec->SetTitle("NMR");
+      gSpec->SetTitle("");
+      gSpec->SetName("NMR");
+   }else if(NMRorNQR==1){
+      gSpec->SetTitle("NQR");
+      gSpec->SetTitle("");
+      gSpec->SetName("NQR");
+   }else{
+      return;
+   }
+}
+
 void NMR::MakeSpec(){
    NumFreq = 0;
 
@@ -305,7 +364,13 @@ void NMR::MakeSpec(){
          Delta = ffreq;
       }
       gSpec->SetPoint(NumFreq, Delta, gAsymm);
-      gSpec->SetPointError(NumFreq, 0, gAsymmErr);
+      double ModDelta;
+      if(NMRorNQR == 1){
+         ModDelta = 3.0/(2*II2*(II2-1))*Mod;
+      }else{
+         ModDelta = Mod;
+      }
+      gSpec->SetPointError(NumFreq, ModDelta, gAsymmErr);
       VecAsymm.push_back(gAsymm);
       VecAsymmError.push_back(gAsymmErr);
       if(Amp>0){
@@ -323,15 +388,19 @@ void NMR::MakeSpec(){
    }
    cout<<"Total Data taking time: "<<time/1000./60<<" min."<<endl;
    gSpec->SetMarkerStyle(20);
-   gSpec->SetLineWidth(0);
    gSpec->SetMarkerSize(1);
-   gSpec->GetXaxis()->SetTitle("Freq. [kHz]");
-   gSpec->GetYaxis()->SetTitle("Asymm.");
+   gSpec->GetXaxis()->SetNdivisions(208);
+   gSpec->GetYaxis()->SetNdivisions(408);
+   //gSpec->SetLineWidth(0);
+   //gSpec->GetXaxis()->SetTitle("Freq. [kHz]");
+   //gSpec->GetYaxis()->SetTitle("Asymm.");
    if(NMRorNQR==0){
       gSpec->SetTitle("NMR");
+      gSpec->SetTitle("");
       gSpec->SetName("NMR");
    }else if(NMRorNQR==1){
       gSpec->SetTitle("NQR");
+      gSpec->SetTitle("");
       gSpec->SetName("NQR");
    }else{
       return;
@@ -405,7 +474,7 @@ void SetLatex(TString &content, const char* parname, double para, double error, 
    //cout<<"come here"<<endl;
 }
 
-void NMR::Bootstrapping(){
+void NMR::Bootstrapping(int MergeLow, int MergeHigh, int MergeFreq){
 
    if (fChain == 0) return;
    IfTiD3 = 0;
@@ -463,8 +532,8 @@ void NMR::Bootstrapping(){
          GoDown = true;
       }
       //just for test, to sum RF-OFF freq at different position.
-      if(freq>2260 && freq<2900){
-         freq = 2500;
+      if(freq>MergeLow && freq<MergeHigh){
+         freq = MergeFreq;
       }
       ////just for 34mAl to remove the first data point with different baseline.
       //if(freq<1400){
@@ -560,7 +629,7 @@ void NMR::FitSpecCompare(double fit_low, double fit_high){
    lg->Draw();
 }
 
-void NMR::FitSpec(int type, double fit_low, double fit_high){
+void NMR::FitSpec(int type, double fit_low, double fit_high, double bin_low, double bin_high, int IfText, const char* canvas, int index_all, int index){
    ReadFitPara("NMR_NQR_fit.in");
    TF1 *f1;
    if(type == 0){
@@ -604,7 +673,7 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    double chi2 = f1->GetChisquare();
    double NDF = f1->GetNDF();
    cout<<"Chi2/NDF = "<<chi2/NDF<<endl;
-   cout<<"Baseline = "<<f1->GetParameter(0)<<" +/- "<<f1->GetParError(0)<<endl;
+   cout<<"BModseline = "<<f1->GetParameter(0)<<" +/- "<<f1->GetParError(0)<<endl;
    cout<<"Amplitude = "<<f1->GetParameter(1)<<" +/- "<<f1->GetParError(1)<<endl;
    cout<<"Centroid = "<<f1->GetParameter(2)<<" +/- "<<f1->GetParError(2)<<endl;
    cout<<"Modulation = "<<f1->GetParameter(3)<<" +/- "<<f1->GetParError(3)<<endl;
@@ -614,13 +683,20 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    FitAmp = f1->GetParameter(1);
    FitAmpError = f1->GetParError(1);
 
+   //double bl = f1->GetParameter(0);
+   //double bll = f1->GetParameter(0)-f1->GetParError(0);
+   //double blh = f1->GetParameter(0)+f1->GetParError(0);
    TCanvas *c2;
-   if(gROOT->FindObject("c2")!=0){
-      c2 = (TCanvas*) gROOT->FindObject("c2");
+   gStyle->SetPadBorderMode(0);
+   if(gROOT->FindObject(canvas)!=0){
+      c2 = (TCanvas*) gROOT->FindObject(canvas);
    }else{
-      c2 = new TCanvas("c2","c2",0,0,800,500);
+      c2 = new TCanvas(canvas,canvas,0,0,600,400*index_all);
+      c2->Divide(1,index_all,0,0);
    }
-   c2->cd();
+   c2->cd(index);
+   c2->cd(index)->SetRightMargin(0.01);
+   gSpec->GetXaxis()->SetLimits(bin_low, bin_high);
    gSpec->Draw("AP");
    f1->Draw("same");
 
@@ -639,19 +715,55 @@ void NMR::FitSpec(int type, double fit_low, double fit_high){
    }else{
       return;
    }
-   SetLatex(content0,"E_Up_cut",EUpMin,0,"[ch]");
-   text0.DrawLatex(posx,0.85,content0);
-   SetLatex(content0,"E_Down_cut",EDownMin,0,"[ch]");
-   text0.DrawLatex(posx,0.80,content0);
-   SetLatex(content0,"Centroid",f1->GetParameter(2),f1->GetParError(2),"[kHz]");
-   text0.DrawLatex(posx,0.75,content0);
-   SetLatex(content0,"Width",f1->GetParameter(4),f1->GetParError(4),"[kHz]");
-   text0.DrawLatex(posx,0.70,content0);
-   SetLatex(content0,"Amplitude",f1->GetParameter(1)*1000,f1->GetParError(1)*1000,"[x10^{-3}]");
-   text0.DrawLatex(posx,0.65,content0);
-   SetLatex(content0,"Baseline",f1->GetParameter(0)*1000,f1->GetParError(0)*1000,"[x10^{-3}]");
-   text0.DrawLatex(posx,0.60,content0);
+   if(IfText == 1){
+      SetLatex(content0,"E_Up_cut",EUpMin,0,"[ch]");
+      text0.DrawLatex(posx,0.85,content0);
+      SetLatex(content0,"E_Down_cut",EDownMin,0,"[ch]");
+      text0.DrawLatex(posx,0.80,content0);
+      SetLatex(content0,"Centroid",f1->GetParameter(2),f1->GetParError(2),"[kHz]");
+      text0.DrawLatex(posx,0.75,content0);
+      SetLatex(content0,"Width",f1->GetParameter(4),f1->GetParError(4),"[kHz]");
+      text0.DrawLatex(posx,0.70,content0);
+      SetLatex(content0,"Amplitude",f1->GetParameter(1)*1000,f1->GetParError(1)*1000,"[x10^{-3}]");
+      text0.DrawLatex(posx,0.65,content0);
+      SetLatex(content0,"Baseline",f1->GetParameter(0)*1000,f1->GetParError(0)*1000,"[x10^{-3}]");
+      text0.DrawLatex(posx,0.60,content0);
+   }
 }
+
+void NMR::DrawBaseLine(double bl, double ble, double bin_low, double bin_high, const char* canvas, int index_all, int index){
+   //only draw the spectrum with baseline
+   TF1 *f2, *f2_l, *f2_h;
+   f2 = new TF1("f2","pol0",bin_low,bin_high);
+   f2_l = new TF1("f2_l","pol0",bin_low,bin_high);
+   f2_h = new TF1("f2_h","pol0",bin_low,bin_high);
+
+   TCanvas *c2;
+   gStyle->SetPadBorderMode(0);
+   if(gROOT->FindObject(canvas)!=0){
+      c2 = (TCanvas*) gROOT->FindObject(canvas);
+   }else{
+      c2 = new TCanvas(canvas,canvas,0,0,600,400*index_all);
+      c2->Divide(1,index_all,0,0);
+   }
+   c2->cd(index);
+   c2->cd(index)->SetRightMargin(0.01);
+   gSpec->GetXaxis()->SetLimits(bin_low, bin_high);
+   gSpec->Draw("AP");
+
+   double bll = bl-ble;
+   double blh = bl+ble;
+   f2->SetParameter(0,bl);
+   f2_l->SetParameter(0,bll);
+   f2_l->SetLineStyle(2);
+   f2_h->SetParameter(0,blh);
+   f2_h->SetLineStyle(2);
+
+   f2->Draw("same");
+   f2_l->Draw("same");
+   f2_h->Draw("same");
+}
+
 
 double gFactorNMR(double LarmorFreq, double LarmorFreqErr, double MagField, double MagFieldErr){//larmor freq. in the unit of kHz, MagField in the unit of Gauss;
    const double h_planck = 4.13566766e-12;//in the unit of eV*ms
@@ -729,7 +841,7 @@ void PlotDataPoint(const char* filename, int type){ //type=0: normal mean value,
          if(ErrorArray[i]<MeanError){
             MeanError = ErrorArray[i];
          }
-      }
+     }
       Mean = Mean/SumSigma;
       MeanError = sqrt(1/SumSigma);
       MeanDev = 0;
@@ -797,4 +909,44 @@ TH1F* PlotHistogram(const char* filename, int index, int numbin, int bin1, int b
    h1->GetXaxis()->CenterTitle(true);
    h1->GetXaxis()->SetTickLength(-0.03);
    return h1;
+}
+
+void ReadAsymmFile(const char* filename, int& numOfLines, int& dim, int*& freq, double**& vecAsymm, double**& vecAsymmError){
+   //here I need to change the address of the pointer so the argument is the
+   //reference of the pointer
+   numOfLines = 0;
+   int NumOfLines, Dim;
+   int * Freq;
+   double ** VecAsymm;
+   double ** VecAsymmError;
+   ifstream in;
+   in.open(filename);
+   std::string line;
+   std::getline(in, line);
+   std::istringstream ss(line);
+   ss >> NumOfLines >> Dim;
+   Freq = new int[Dim];
+   VecAsymm = new double* [NumOfLines];
+   VecAsymmError = new double* [NumOfLines];
+   for(int i=0; i<Dim; i++){
+      ss >> Freq[i];
+   }
+   for(int i=0; i<NumOfLines; i++){
+      VecAsymm [i] = new double [Dim];
+      VecAsymmError[i] = new double [Dim];
+   }
+   while ( std::getline(in, line) ){
+      int index;
+      std::istringstream ss1(line);
+      ss1 >> index;
+      for(int i=0; i<Dim; i++){
+         ss1 >> VecAsymm[index-1][i] >> VecAsymmError[index-1][i];
+         cout << VecAsymm[index-1][i] <<", "<< VecAsymmError[index-1][i]<<endl;
+      }
+   }
+   dim = Dim;
+   numOfLines = NumOfLines;
+   freq = Freq;
+   vecAsymm = VecAsymm;
+   vecAsymmError = VecAsymmError;
 }
